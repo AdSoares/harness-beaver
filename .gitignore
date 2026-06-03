@@ -1,0 +1,8 @@
+# Binário compilado
+bvr.exe
+bvr
+/dist/
+
+# Go
+*.test
+*.out
