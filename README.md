@@ -1,187 +1,187 @@
 # HarnessBeaver (`bvr`)
 
-Launcher para abrir o **Claude Code** (ou PowerShell/cmd) em vários diretórios de
-uma vez — em **abas** do Windows Terminal ou em **janelas separadas**. É um sistema
-de atalhos dinâmico para diretórios: você registra projetos, agrupa em pacotes e
-abre tudo com um comando.
+A launcher to open **Claude Code** (or PowerShell/cmd) across many directories at
+once — in **tabs** of Windows Terminal or in **separate windows**. It's a dynamic
+shortcut system for directories: you register projects, group them into packages, and
+open everything with a single command.
 
-Tem duas frentes sobre o mesmo núcleo:
+It has two faces over the same core:
 
-- **TUI rica** (`bvr` sem argumentos) — menu interativo navegável.
-- **CLI clássica** (`bvr <comando>`) — scriptável, para automação.
+- **Rich TUI** (`bvr` with no arguments) — an interactive, navigable menu.
+- **Classic CLI** (`bvr <command>`) — scriptable, for automation.
 
-## Requisitos
+## Requirements
 
-- **Para rodar:** [Windows Terminal](https://aka.ms/terminal) (`wt`) e, para o shell
-  `claude`, o Claude Code CLI no PATH. **Nenhum runtime** — o `bvr.exe` é estático.
-- **Para compilar:** [Go](https://go.dev/dl/) 1.22+ (`winget install GoLang.Go`).
+- **To run:** [Windows Terminal](https://aka.ms/terminal) (`wt`) and, for the `claude`
+  shell, the Claude Code CLI on your PATH. **No runtime needed** — `bvr.exe` is static.
+- **To build:** [Go](https://go.dev/dl/) 1.22+ (`winget install GoLang.Go`).
 
 ## Build
 
 ```powershell
 go mod tidy
-.\build.ps1            # gera bvr.exe
-.\build.ps1 -All       # cross-compila para win/linux/mac em ./dist
+.\build.ps1            # produces bvr.exe
+.\build.ps1 -All       # cross-compiles for win/linux/mac into ./dist
 ```
 
-Distribua o `bvr.exe`: o destinatário só coloca em uma pasta do `PATH` e roda.
+Distribute `bvr.exe`: the recipient just drops it in a folder on `PATH` and runs it.
 
-## Uso — TUI
+## Usage — TUI
 
 ```powershell
-bvr        # ou: bvr ui
+bvr        # or: bvr ui
 ```
 
-Menu: Abrir projetos · Abrir pacote · Adicionar projeto · Remover projeto ·
-Escanear & importar · Criar pacote · Remover pacote · Executar comando ·
-Analisar aprendizados · Configurações.
+Menu: Open projects · Open package · Add project · Remove project ·
+Scan & import · Create package · Remove package · Run command ·
+Analyze learnings · Settings.
 
-Em qualquer lista, tecle **`/`** para **filtrar** por nome/descrição (útil em listas
-longas); `enter` aplica o filtro, `esc` limpa. Navegação: `↑/↓` item, `←/→` (ou PgUp/PgDn)
-páginas, `Home/End` início/fim.
-Teclas: `↑/↓` navega, `espaço` marca (multi-seleção), `enter` confirma, `esc` volta,
-`q`/`ctrl+c` sai.
+In any list, press **`/`** to **filter** by name/description (handy for long lists);
+`enter` applies the filter, `esc` clears it. Navigation: `↑/↓` item, `←/→` (or PgUp/PgDn)
+pages, `Home/End` start/end.
+Keys: `↑/↓` navigate, `space` toggle (multi-select), `enter` confirm, `esc` back,
+`q`/`ctrl+c` quit.
 
-## Uso — CLI
+## Usage — CLI
 
 ```powershell
-bvr list [projects|packages]            # lista o registro
-bvr add "Meu App" F:\proj\meu-app --shell claude
-bvr edit meu-app --name "Outro" --path F:\novo --shell pwsh
-bvr remove meu-app
-bvr scan --root F:\02-company-os\produtos --import   # importa projetos de código
-bvr pkg add "SMB Ativo" --projects os247,beauty --mode tabs --shell claude
-bvr pkg remove smb-ativo
-bvr open os247 beauty --mode windows --shell pwsh    # abre projetos/pacotes
-bvr open smb-ativo --dry-run                         # mostra os comandos wt
-bvr status                                           # status git de todos os projetos
-bvr status smb-ativo                                 # status git de um pacote/ids
-bvr each smb-ativo -- git pull                       # roda um comando em cada projeto
-bvr each repair beauty --parallel -- git fetch       # idem, em paralelo
+bvr list [projects|packages]            # list the registry
+bvr add "My App" F:\proj\my-app --shell claude
+bvr edit my-app --name "Other" --path F:\new --shell pwsh
+bvr remove my-app
+bvr scan --root F:\02-company-os\produtos --import   # import code projects
+bvr pkg add "SMB Active" --projects os247,beauty --mode tabs --shell claude
+bvr pkg remove smb-active
+bvr open os247 beauty --mode windows --shell pwsh    # open projects/packages
+bvr open smb-active --dry-run                         # show the wt commands
+bvr status                                           # git status of all projects
+bvr status smb-active                                 # git status of a package/ids
+bvr each smb-active -- git pull                       # run a command in each project
+bvr each repair beauty --parallel -- git fetch       # same, in parallel
 ```
 
-`bvr each <ids...> -- <comando>` executa o comando no diretório de cada projeto alvo
-(pacote ou ids), registrando cada execução no diário. Sequencial mostra a saída ao vivo;
-`--parallel` captura e imprime por projeto. Sai com código ≠ 0 se algum projeto falhar.
+`bvr each <ids...> -- <command>` runs the command in each target project's directory
+(package or ids), logging every execution to the journal. Sequential mode shows live output;
+`--parallel` captures and prints per project. Exits with a non-zero code if any project fails.
 
-### Layouts (abas/painéis por projeto)
+### Layouts (tabs/panes per project)
 
-Um **layout** abre um projeto numa janela com várias abas e/ou painéis (split-panes),
-cada um com seu shell e comando — ex.: um painel com `claude`, outro rodando o dev server,
-outra aba com `git`.
+A **layout** opens a project in one window with several tabs and/or panes (split-panes),
+each with its own shell and command — e.g. one pane running `claude`, another running the
+dev server, another tab with `git`.
 
 ```powershell
-bvr layout add dev --preset dev          # cria layout (presets: claude|dev|triple)
-bvr layout tab dev --title git           # adiciona uma aba
+bvr layout add dev --preset dev          # create layout (presets: claude|dev|triple)
+bvr layout tab dev --title git           # add a tab
 bvr layout pane dev --tab 2 --shell pwsh --command "git status" --split V
-bvr layout show dev --project repair     # mostra o comando wt resultante
-bvr layout assign dev repair             # define o layout padrão do projeto
-bvr open repair --layout dev             # abre com o layout (ou só 'bvr open repair' se for o padrão)
-bvr open repair --no-layout              # ignora o layout padrão
-bvr layout list                          # lista; bvr layout rm <id> remove
+bvr layout show dev --project repair     # show the resulting wt command
+bvr layout assign dev repair             # set the project's default layout
+bvr open repair --layout dev             # open with the layout (or just 'bvr open repair' if it's the default)
+bvr open repair --no-layout              # ignore the default layout
+bvr layout list                          # list; bvr layout rm <id> removes
 ```
 
-Na TUI, **Abrir com layout** escolhe o layout e o projeto. Cada painel usa o diretório do
-projeto por padrão; `--split H` (horizontal) ou `V` (vertical) define como o painel divide
-o anterior. Os painéis dividem sequencialmente o último painel criado.
+In the TUI, **Open with layout** picks the layout and the project. Each pane uses the
+project's directory by default; `--split H` (horizontal) or `V` (vertical) defines how the
+pane splits the previous one. Panes split the most recently created pane sequentially.
 
-`bvr status` mostra, por projeto, a branch, se há alterações pendentes (`✗`/`✓`) e
-ahead/behind do upstream (`↑`/`↓`). Na **TUI**, esse status aparece (carregado em
-segundo plano) na descrição de cada projeto ao Abrir/Remover/montar pacote.
+`bvr status` shows, per project, the branch, whether there are pending changes (`✗`/`✓`)
+and ahead/behind of upstream (`↑`/`↓`). In the **TUI**, this status appears (loaded in the
+background) in each project's description when Opening/Removing/building a package.
 
-## Diário de bordo e aprendizados
+## Journal and learnings
 
-O `bvr` também executa comandos em seu nome, **registra** tudo num diário diário e, a
-cada novo dia, **oferece analisar os aprendizados** do dia anterior usando IA.
+`bvr` also runs commands on your behalf, **logs** everything to a daily journal and, at
+the start of each new day, **offers to analyze the previous day's learnings** using AI.
 
 ```powershell
-bvr run echo ola                       # executa no shell default e registra
-bvr run --shell cmd "echo oi & dir"    # cmd; também: --shell pwsh|bash|zsh
-bvr shell                              # REPL: digita comandos seguidos, 'exit' p/ sair
-bvr review                             # analisa o dia pendente (ou mostra o cache de hoje)
-bvr review 2026-06-02                  # se já houver análise, mostra o cache
-bvr review 2026-06-02 --force          # refaz a análise mesmo com cache
-bvr review --dry-run                   # mostra o prompt sem chamar a IA (sem custo)
+bvr run echo hello                     # runs in the default shell and logs it
+bvr run --shell cmd "echo hi & dir"    # cmd; also: --shell pwsh|bash|zsh
+bvr shell                              # REPL: type commands one after another, 'exit' to quit
+bvr review                             # analyze the pending day (or show today's cache)
+bvr review 2026-06-02                  # if already analyzed, show the cache
+bvr review 2026-06-02 --force          # re-run the analysis even with a cache
+bvr review --dry-run                   # show the prompt without calling the AI (no cost)
 
-bvr history                            # comandos recentes (mais novos primeiro)
-bvr history --project repair --failed  # filtra por projeto e só os que falharam
-bvr history --grep "git" --days 30     # filtra por texto, últimos 30 dias
+bvr history                            # recent commands (newest first)
+bvr history --project repair --failed  # filter by project and only the failed ones
+bvr history --grep "git" --days 30     # filter by text, last 30 days
 
-bvr alias set deploy "npm run build && npm run deploy"   # cria um atalho
-bvr alias                              # lista os atalhos
-bvr do deploy                          # executa o atalho
+bvr alias set deploy "npm run build && npm run deploy"   # create a shortcut
+bvr alias                              # list shortcuts
+bvr do deploy                          # run the shortcut
 bvr alias set commit "git commit -m {1}"
-bvr do commit "fix: ajuste"            # {1}..{N} e {*} recebem os argumentos
+bvr do commit "fix: tweak"             # {1}..{N} and {*} receive the arguments
 ```
 
-Cada comando executado pelo `bvr` é **associado ao projeto** (quando o diretório cai
-dentro de um projeto registrado), permitindo `bvr history --project <id>` e contexto de
-projeto na análise. Na **TUI**, há as telas **Histórico** (re-executa o comando escolhido)
-e **Atalhos** (roda um alias) — ambas com o filtro `/`.
+Each command run by `bvr` is **associated with a project** (when the directory falls
+within a registered project), enabling `bvr history --project <id>` and project context in
+the analysis. In the **TUI**, there are **History** (re-runs the chosen command) and
+**Shortcuts** (runs an alias) screens — both with the `/` filter.
 
-- **Cache:** uma vez analisado, o dia fica salvo. `bvr review <dia>` mostra o cache;
-  use `--force` para reanalisar. Na TUI, escolher um dia já analisado oferece **ver o
-  cache** ou **reanalisar**. O **dia atual** sempre pode ser reanalisado (o log ainda cresce).
-- A análise na TUI roda **em segundo plano** com um indicador de progresso (não trava a tela).
+- **Cache:** once analyzed, the day is saved. `bvr review <day>` shows the cache;
+  use `--force` to re-analyze. In the TUI, picking an already-analyzed day offers **view the
+  cache** or **re-analyze**. The **current day** can always be re-analyzed (the log is still growing).
+- The TUI analysis runs **in the background** with a progress indicator (it doesn't block the screen).
 
-- **Logs:** `~/.harnessbeaver/logs/AAAA-MM-DD.jsonl` (comando, shell, cwd, exit code,
-  duração, stdout/stderr — cada stream truncado em 10KB).
-- **Análises:** `~/.harnessbeaver/learnings/AAAA-MM-DD.md`.
-- **Motor de análise** (`settings.insightsEngine`): `auto` (default — usa o `claude` CLI
-  se presente, senão a API), `claude`, ou `api` (requer `ANTHROPIC_API_KEY`;
-  modelo em `settings.insightsModel`).
-- **Auto-oferta:** ao abrir o `bvr` (TUI) ou `bvr shell` num novo dia, se houver log do
-  dia anterior sem análise, ele pergunta se quer analisar (uma vez por dia). O `bvr run`
-  só exibe uma dica não-bloqueante.
-- **Escopo:** o `bvr` registra apenas o que **ele** executa (`run`/`shell`), não o que é
-  digitado dentro das abas abertas pelo launcher.
-- O shell default do runner é `settings.defaultRunShell` (`pwsh`).
+- **Logs:** `~/.harnessbeaver/logs/YYYY-MM-DD.jsonl` (command, shell, cwd, exit code,
+  duration, stdout/stderr — each stream truncated at 10KB).
+- **Analyses:** `~/.harnessbeaver/learnings/YYYY-MM-DD.md`.
+- **Analysis engine** (`settings.insightsEngine`): `auto` (default — uses the `claude` CLI
+  if present, otherwise the API), `claude`, or `api` (requires `ANTHROPIC_API_KEY`;
+  model in `settings.insightsModel`).
+- **Auto-offer:** when opening `bvr` (TUI) or `bvr shell` on a new day, if there's a log
+  from the previous day without an analysis, it asks whether to analyze (once per day). `bvr run`
+  only shows a non-blocking hint.
+- **Scope:** `bvr` logs only what **it** runs (`run`/`shell`), not what is typed
+  inside the tabs opened by the launcher.
+- The runner's default shell is `settings.defaultRunShell` (`pwsh`).
 
-### Modos e shells
+### Modes and shells
 
-- **Modo** `tabs`: uma janela do Windows Terminal com uma aba por projeto.
-- **Modo** `windows`: uma janela separada por projeto.
-- **Shell** por aba: `claude` (roda Claude Code), `pwsh`, `cmd`.
+- **Mode** `tabs`: one Windows Terminal window with one tab per project.
+- **Mode** `windows`: a separate window per project.
+- **Shell** per tab: `claude` (runs Claude Code), `pwsh`, `cmd`.
 
-Precedência de modo: default global → pacote → flag `--mode`.
-Precedência de shell: default global → shell do projeto → pacote/flag.
+Mode precedence: global default → package → `--mode` flag.
+Shell precedence: global default → project shell → package/flag.
 
-## Configuração
+## Configuration
 
-Persistida em `%USERPROFILE%\.harnessbeaver\config.json` (criada no primeiro uso).
-Contém `settings`, `projects` e `packages`. Edite as settings pela CLI ou pela tela
-**Configurações** da TUI (sem mexer no JSON à mão):
+Persisted in `%USERPROFILE%\.harnessbeaver\config.json` (created on first use).
+Contains `settings`, `projects` and `packages`. Edit settings via the CLI or the
+**Settings** screen in the TUI (without touching the JSON by hand):
 
 ```powershell
-bvr config                                   # lista todas as settings
+bvr config                                   # list all settings
 bvr config get insightsEngine
 bvr config set insightsModel claude-opus-4-8
-bvr config set learningsExtraDir F:\02-company-os\_content\learnings  # cópia extra das análises
-bvr config set learningsExtraDir ""          # desliga a cópia extra
+bvr config set learningsExtraDir F:\02-company-os\_content\learnings  # extra copy of the analyses
+bvr config set learningsExtraDir ""          # turn off the extra copy
 ```
 
-Chaves: `scanRoot`, `defaultMode` (tabs|windows), `defaultShell` (claude|pwsh|cmd),
-`defaultRunShell` (pwsh|cmd|bash|zsh; default OS-aware), `insightsEngine` (auto|claude|api),
-`insightsModel`, `learningsExtraDir`, `upgradeSource`, `tabColors` (true|false — cor diferente
-por aba/janela aberta).
+Keys: `scanRoot`, `defaultMode` (tabs|windows), `defaultShell` (claude|pwsh|cmd),
+`defaultRunShell` (pwsh|cmd|bash|zsh; OS-aware default), `insightsEngine` (auto|claude|api),
+`insightsModel`, `learningsExtraDir`, `upgradeSource`, `tabColors` (true|false — a different
+color per opened tab/window).
 
-## Manutenção
+## Maintenance
 
 ```powershell
-bvr version                       # versão do binário
-bvr completion powershell|bash|zsh   # script de autocompletar
-bvr upgrade --source <url|caminho>   # baixa e troca o binário (ou settings.upgradeSource)
+bvr version                       # binary version
+bvr completion powershell|bash|zsh   # autocompletion script
+bvr upgrade --source <url|path>      # downloads and swaps the binary (or settings.upgradeSource)
 ```
 
-## Detecção de projetos (scan)
+## Project detection (scan)
 
-O scanner varre `scanRoot` até 3 níveis e marca como projeto de código diretórios
-com: `.git`, `package.json`, `go.mod`, `*.sln`, `*.csproj`, `pyproject.toml`,
-`Cargo.toml`, `requirements.txt`, `src/`, `CLAUDE.md` ou `AGENTS.md`. Ao achar um
-marcador, poda o ramo (não desce em subpastas do mesmo repositório).
+The scanner walks `scanRoot` up to 3 levels deep and marks as a code project any directory
+with: `.git`, `package.json`, `go.mod`, `*.sln`, `*.csproj`, `pyproject.toml`,
+`Cargo.toml`, `requirements.txt`, `src/`, `CLAUDE.md` or `AGENTS.md`. When it finds a
+marker, it prunes the branch (it doesn't descend into subfolders of the same repository).
 
-**Grupos (diretórios-pai):** o `bvr scan --groups` também oferece os diretórios-pai
-que agrupam ≥2 projetos (ex.: `produtos/smb`, `produtos/engenharia`, e a própria raiz),
-marcados como `grupo: N projetos`. Importá-los registra o diretório-pai como um projeto,
-permitindo abrir uma ferramenta (claude/pwsh/…) no nível que agrupa vários projetos. Na
-TUI, a tela **Escanear & importar** já lista os grupos junto com os projetos.
+**Groups (parent directories):** `bvr scan --groups` also offers the parent directories
+that group ≥2 projects (e.g. `produtos/smb`, `produtos/engenharia`, and the root itself),
+marked as `group: N projects`. Importing them registers the parent directory as a project,
+letting you open a tool (claude/pwsh/…) at the level that groups several projects. In the
+TUI, the **Scan & import** screen already lists the groups alongside the projects.
