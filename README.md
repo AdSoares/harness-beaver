@@ -46,10 +46,10 @@ Keys: `↑/↓` navigate, `space` toggle (multi-select), `enter` confirm, `esc` 
 
 ```powershell
 bvr list [projects|packages]            # list the registry
-bvr add "My App" F:\proj\my-app --shell claude
-bvr edit my-app --name "Other" --path F:\new --shell pwsh
+bvr add "My App" C:\path\to\my-app --shell claude
+bvr edit my-app --name "Other" --path C:\path\to\new-location --shell pwsh
 bvr remove my-app
-bvr scan --root F:\02-company-os\produtos --import   # import code projects
+bvr scan --root C:\path\to\projects --import   # import code projects
 bvr pkg add "SMB Active" --projects os247,beauty --mode tabs --shell claude
 bvr pkg remove smb-active
 bvr open os247 beauty --mode windows --shell pwsh    # open projects/packages
@@ -156,7 +156,7 @@ Contains `settings`, `projects` and `packages`. Edit settings via the CLI or the
 bvr config                                   # list all settings
 bvr config get insightsEngine
 bvr config set insightsModel claude-opus-4-8
-bvr config set learningsExtraDir F:\02-company-os\_content\learnings  # extra copy of the analyses
+bvr config set learningsExtraDir C:\path\to\learnings  # extra copy of the analyses
 bvr config set learningsExtraDir ""          # turn off the extra copy
 ```
 
@@ -201,7 +201,7 @@ with: `.git`, `package.json`, `go.mod`, `*.sln`, `*.csproj`, `pyproject.toml`,
 marker, it prunes the branch (it doesn't descend into subfolders of the same repository).
 
 **Groups (parent directories):** `bvr scan --groups` also offers the parent directories
-that group ≥2 projects (e.g. `produtos/smb`, `produtos/engenharia`, and the root itself),
+that group ≥2 projects (e.g. `work/apps`, `work/services`, and the root itself),
 marked as `group: N projects`. Importing them registers the parent directory as a project,
 letting you open a tool (claude/pwsh/…) at the level that groups several projects. In the
 TUI, the **Scan & import** screen already lists the groups alongside the projects.
