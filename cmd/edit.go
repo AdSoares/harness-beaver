@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"harnessbeaver/internal/config"
+	"harnessbeaver/internal/i18n"
 )
 
 var (
@@ -17,8 +18,8 @@ var (
 )
 
 var editCmd = &cobra.Command{
-	Use:   "edit <projId>",
-	Short: "Altera nome, path ou shell de um projeto",
+	Use:   i18n.T("edit <projId>"),
+	Short: i18n.T("Change name, path or shell of a project"),
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		shell, err := validateShell(editShell)
@@ -31,7 +32,7 @@ var editCmd = &cobra.Command{
 		}
 		p, ok := cfg.FindProject(args[0])
 		if !ok {
-			return fmt.Errorf("projeto não encontrado: %s", args[0])
+			return fmt.Errorf(i18n.T("project not found: %s"), args[0])
 		}
 		if cmd.Flags().Changed("name") {
 			p.Name = editName
@@ -43,7 +44,7 @@ var editCmd = &cobra.Command{
 			}
 			info, err := os.Stat(abs)
 			if err != nil || !info.IsDir() {
-				return fmt.Errorf("path inválido: %s", editPath)
+				return fmt.Errorf(i18n.T("invalid path: %s"), editPath)
 			}
 			p.Path = abs
 		}
@@ -53,14 +54,14 @@ var editCmd = &cobra.Command{
 		if err := cfg.Save(); err != nil {
 			return err
 		}
-		fmt.Printf("Projeto atualizado: %s\n", p.ID)
+		fmt.Printf(i18n.T("Project updated: %s\n"), p.ID)
 		return nil
 	},
 }
 
 func init() {
-	editCmd.Flags().StringVar(&editName, "name", "", "novo nome")
-	editCmd.Flags().StringVar(&editPath, "path", "", "novo caminho")
-	editCmd.Flags().StringVar(&editShell, "shell", "", "novo shell padrão: claude|pwsh|cmd")
+	editCmd.Flags().StringVar(&editName, "name", "", i18n.T("new name"))
+	editCmd.Flags().StringVar(&editPath, "path", "", i18n.T("new path"))
+	editCmd.Flags().StringVar(&editShell, "shell", "", i18n.T("new default shell: claude|pwsh|cmd"))
 	rootCmd.AddCommand(editCmd)
 }

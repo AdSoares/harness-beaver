@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"harnessbeaver/internal/config"
+	"harnessbeaver/internal/i18n"
 	"harnessbeaver/internal/runner"
 )
 
@@ -18,28 +19,28 @@ var (
 )
 
 var eachCmd = &cobra.Command{
-	Use:   "each <pkgId|projId...> -- <comando...>",
-	Short: "Roda um comando em cada projeto (de um pacote ou ids)",
-	Long: `Executa o mesmo comando no diretório de cada projeto alvo.
-Os alvos (ids de projeto e/ou pacote) vêm antes de '--' e o comando vem depois.
-Cada execução é registrada no diário (com o cwd do projeto).
+	Use:   i18n.T("each <pkgId|projId...> -- <command...>"),
+	Short: i18n.T("Run a command in each project (from a package or ids)"),
+	Long: i18n.T(`Run the same command in each target project's directory.
+Targets (project and/or package ids) come before '--' and the command comes after.
+Each run is recorded in the journal (with the project's cwd).
 
-Exemplos:
+Examples:
   bvr each smb-ativo -- git pull
   bvr each repair beauty --shell bash -- git status -s
-  bvr each smb-ativo --parallel -- git fetch`,
+  bvr each smb-ativo --parallel -- git fetch`),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		dash := cmd.ArgsLenAtDash()
 		if dash < 0 {
-			return fmt.Errorf("use '--' para separar alvos do comando: bvr each <ids...> -- <comando...>")
+			return i18n.Errorf("use '--' to separate targets from command: bvr each <ids...> -- <command...>")
 		}
 		targetArgs := args[:dash]
 		cmdArgs := args[dash:]
 		if len(targetArgs) == 0 {
-			return fmt.Errorf("informe ao menos um projeto/pacote antes de '--'")
+			return i18n.Errorf("provide at least one project/package before '--'")
 		}
 		if len(cmdArgs) == 0 {
-			return fmt.Errorf("informe o comando após '--'")
+			return i18n.Errorf("provide the command after '--'")
 		}
 
 		cfg, err := config.Load()
@@ -51,7 +52,7 @@ Exemplos:
 			return err
 		}
 		if len(projects) == 0 {
-			fmt.Println("Nenhum projeto alvo.")
+			fmt.Println(i18n.T("No target projects."))
 			return nil
 		}
 
@@ -72,7 +73,7 @@ Exemplos:
 			failures = runEachSequential(projects, shell, command)
 		}
 
-		fmt.Printf("\nResumo: %d projeto(s), %d com erro (exit != 0).\n", len(projects), failures)
+		fmt.Printf(i18n.T("\nSummary: %d project(s), %d with error (exit != 0).\n"), len(projects), failures)
 		if failures > 0 {
 			os.Exit(1)
 		}
@@ -84,9 +85,9 @@ Exemplos:
 func runEachSequential(projects []config.Project, shell config.Shell, command string) int {
 	failures := 0
 	for _, p := range projects {
-		fmt.Printf("\n=== %s · %s ===\n", p.Name, p.Path)
+		fmt.Printf(i18n.T("\n=== %s · %s ===\n"), p.Name, p.Path)
 		res, _ := runner.Run(shell, command, p.Path, true)
-		fmt.Printf("(exit %d, %dms)\n", res.ExitCode, res.Duration.Milliseconds())
+		fmt.Printf(i18n.T("(exit %d, %dms)\n"), res.ExitCode, res.Duration.Milliseconds())
 		if res.ExitCode != 0 {
 			failures++
 		}
@@ -113,7 +114,7 @@ func runEachParallel(projects []config.Project, shell config.Shell, command stri
 	failures := 0
 	for i, p := range projects {
 		r := results[i]
-		fmt.Printf("\n=== %s · %s === (exit %d, %dms)\n", p.Name, p.Path, r.ExitCode, r.Duration.Milliseconds())
+		fmt.Printf(i18n.T("\n=== %s · %s === (exit %d, %dms)\n"), p.Name, p.Path, r.ExitCode, r.Duration.Milliseconds())
 		if out := strings.TrimRight(r.Stdout, "\n"); out != "" {
 			fmt.Println(out)
 		}
@@ -128,7 +129,7 @@ func runEachParallel(projects []config.Project, shell config.Shell, command stri
 }
 
 func init() {
-	eachCmd.Flags().StringVar(&eachShell, "shell", "", "shell de execução: pwsh|cmd|bash|zsh")
-	eachCmd.Flags().BoolVar(&eachParallel, "parallel", false, "roda em paralelo (saída capturada por projeto)")
+	eachCmd.Flags().StringVar(&eachShell, "shell", "", i18n.T("execution shell: pwsh|cmd|bash|zsh"))
+	eachCmd.Flags().BoolVar(&eachParallel, "parallel", false, i18n.T("run in parallel (output captured per project)"))
 	rootCmd.AddCommand(eachCmd)
 }

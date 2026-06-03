@@ -19,9 +19,9 @@ func TestProjectIDForPath(t *testing.T) {
 		want  string
 	}{
 		{filepath.Join(app, "src", "main.go"), "app"}, // prefixo mais longo vence
-		{app, "app"},                                  // o próprio diretório
-		{filepath.Join(proj, "outro"), "proj"},        // cai no pai
-		{filepath.Join(root, "fora"), ""},             // nenhum
+		{app, "app"},                           // o próprio diretório
+		{filepath.Join(proj, "outro"), "proj"}, // cai no pai
+		{filepath.Join(root, "fora"), ""},      // nenhum
 	}
 	for _, c := range cases {
 		if got := cfg.ProjectIDForPath(c.query); got != c.want {
@@ -39,8 +39,8 @@ func TestExpandAlias(t *testing.T) {
 		{"echo {1}", []string{"hi"}, "echo hi"},
 		{"git commit -m {1}", []string{"msg"}, "git commit -m msg"},
 		{"echo {*}", []string{"a", "b"}, "echo a b"},
-		{"ls", []string{"x"}, "ls x"},   // sem placeholder: anexa
-		{"ls", nil, "ls"},               // sem args
+		{"ls", []string{"x"}, "ls x"}, // sem placeholder: anexa
+		{"ls", nil, "ls"},             // sem args
 		{"run {1} {2}", []string{"a", "b"}, "run a b"},
 	}
 	for _, c := range cases {

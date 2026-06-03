@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+
+	"harnessbeaver/internal/i18n"
 )
 
 // Candidate é um diretório candidato a ser registrado: um projeto de código
@@ -112,7 +114,7 @@ func Groups(leaves []Candidate, root string) []Candidate {
 			Path:    dir,
 			IsGroup: true,
 			Count:   n,
-			Markers: []string{fmt.Sprintf("grupo: %d projetos", n)},
+			Markers: []string{fmt.Sprintf(i18n.T("group: %d projects"), n)},
 		})
 	}
 	sort.Slice(out, func(i, j int) bool { return out[i].Path < out[j].Path })

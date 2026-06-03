@@ -3,6 +3,8 @@ package tui
 import (
 	"fmt"
 	"strings"
+
+	"harnessbeaver/internal/i18n"
 )
 
 // pickItem é uma linha selecionável do picker.
@@ -151,16 +153,16 @@ func (p picker) view(pageSize int) string {
 		if p.filtering {
 			caret = "▏"
 		}
-		b.WriteString(descStyle.Render("filtro: ") + p.filter + caret + "\n")
+		b.WriteString(descStyle.Render(i18n.T("filter: ")) + p.filter + caret + "\n")
 	}
 	b.WriteString("\n")
 
 	vis := p.visible()
 	if len(vis) == 0 {
 		if p.filter != "" {
-			b.WriteString(descStyle.Render("(nenhum item corresponde ao filtro)") + "\n")
+			b.WriteString(descStyle.Render(i18n.T("(no items match the filter)")) + "\n")
 		} else {
-			b.WriteString(descStyle.Render("(vazio)") + "\n")
+			b.WriteString(descStyle.Render(i18n.T("(empty)")) + "\n")
 		}
 		return b.String()
 	}
@@ -170,7 +172,7 @@ func (p picker) view(pageSize int) string {
 	start, end := windowBounds(p.cursor, len(vis), pageSize)
 
 	if start > 0 {
-		b.WriteString(descStyle.Render(fmt.Sprintf("  ▲ %d acima", start)) + "\n")
+		b.WriteString(descStyle.Render(fmt.Sprintf(i18n.T("  ▲ %d above"), start)) + "\n")
 	}
 	for vi := start; vi < end; vi++ {
 		it := p.items[vis[vi]]
@@ -196,15 +198,15 @@ func (p picker) view(pageSize int) string {
 		}
 	}
 	if end < len(vis) {
-		b.WriteString(descStyle.Render(fmt.Sprintf("  ▼ %d abaixo", len(vis)-end)) + "\n")
+		b.WriteString(descStyle.Render(fmt.Sprintf(i18n.T("  ▼ %d below"), len(vis)-end)) + "\n")
 	}
 
-	footer := fmt.Sprintf("  %d–%d de %d", start+1, end, len(vis))
+	footer := fmt.Sprintf(i18n.T("  %d–%d of %d"), start+1, end, len(vis))
 	if p.filter != "" {
-		footer += fmt.Sprintf(" (filtrados de %d)", len(p.items))
+		footer += fmt.Sprintf(i18n.T(" (filtered from %d)"), len(p.items))
 	}
 	if p.multi {
-		footer += fmt.Sprintf(" · %d marcado(s)", len(p.checked()))
+		footer += fmt.Sprintf(i18n.T(" · %d selected"), len(p.checked()))
 	}
 	b.WriteString("\n" + descStyle.Render(footer) + "\n")
 	return b.String()

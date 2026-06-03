@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"harnessbeaver/internal/config"
+	"harnessbeaver/internal/i18n"
 )
 
 func keyList() string {
@@ -20,8 +21,8 @@ func keyList() string {
 }
 
 var configCmd = &cobra.Command{
-	Use:   "config [get <chave> | set <chave> <valor>]",
-	Short: "Mostra ou altera as configurações do bvr",
+	Use:   i18n.T("config [get <key> | set <key> <value>]"),
+	Short: i18n.T("Show or change bvr settings"),
 	Args:  cobra.ArbitraryArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg, err := config.Load()
@@ -38,22 +39,22 @@ var configCmd = &cobra.Command{
 
 		case args[0] == "get":
 			if len(args) != 2 {
-				return fmt.Errorf("uso: bvr config get <chave>")
+				return i18n.Errorf("usage: bvr config get <key>")
 			}
 			d, ok := config.FindSetting(args[1])
 			if !ok {
-				return fmt.Errorf("chave desconhecida %q (válidas: %s)", args[1], keyList())
+				return fmt.Errorf(i18n.T("unknown key %q (valid: %s)"), args[1], keyList())
 			}
 			fmt.Println(d.Get(cfg))
 			return nil
 
 		case args[0] == "set":
 			if len(args) < 2 {
-				return fmt.Errorf("uso: bvr config set <chave> <valor>")
+				return i18n.Errorf("usage: bvr config set <key> <value>")
 			}
 			d, ok := config.FindSetting(args[1])
 			if !ok {
-				return fmt.Errorf("chave desconhecida %q (válidas: %s)", args[1], keyList())
+				return fmt.Errorf(i18n.T("unknown key %q (valid: %s)"), args[1], keyList())
 			}
 			value := strings.Join(args[2:], " ") // permite valor vazio p/ desligar
 			if err := d.Apply(cfg, value); err != nil {
@@ -65,7 +66,7 @@ var configCmd = &cobra.Command{
 			fmt.Printf("%s = %s\n", d.Key, dash(d.Get(cfg)))
 			return nil
 		}
-		return fmt.Errorf("subcomando inválido %q (use: get, set, ou nada para listar)", args[0])
+		return fmt.Errorf(i18n.T("invalid subcommand %q (use: get, set, or nothing to list)"), args[0])
 	},
 }
 

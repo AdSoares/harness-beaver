@@ -6,12 +6,13 @@ import (
 	"github.com/spf13/cobra"
 
 	"harnessbeaver/internal/config"
+	"harnessbeaver/internal/i18n"
 	"harnessbeaver/internal/launcher"
 )
 
 var layoutCmd = &cobra.Command{
 	Use:   "layout",
-	Short: "Gerencia layouts (arranjos de abas/painéis) para abrir projetos",
+	Short: i18n.T("Manage layouts (tab/pane arrangements) for opening projects"),
 	Args:  cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg, err := config.Load()
@@ -19,7 +20,7 @@ var layoutCmd = &cobra.Command{
 			return err
 		}
 		if len(cfg.Layouts) == 0 {
-			fmt.Println("Nenhum layout. Crie com: bvr layout add <nome> [--preset dev|triple]")
+			fmt.Println(i18n.T("No layouts. Create one with: bvr layout add <name> [--preset dev|triple]"))
 			return nil
 		}
 		for _, l := range cfg.Layouts {
@@ -27,7 +28,7 @@ var layoutCmd = &cobra.Command{
 			for _, t := range l.Tabs {
 				panes += len(t.Panes)
 			}
-			fmt.Printf("  %-16s %-24s %d aba(s), %d painel(éis)\n", l.ID, l.Name, len(l.Tabs), panes)
+			fmt.Printf(i18n.T("  %-16s %-24s %d tab(s), %d pane(s)\n"), l.ID, l.Name, len(l.Tabs), panes)
 		}
 		return nil
 	},
@@ -45,8 +46,8 @@ var (
 )
 
 var layoutAddCmd = &cobra.Command{
-	Use:   "add <nome>",
-	Short: "Cria um layout (preset: claude|dev|triple)",
+	Use:   i18n.T("add <name>"),
+	Short: i18n.T("Create a layout (preset: claude|dev|triple)"),
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg, err := config.Load()
@@ -60,14 +61,14 @@ var layoutAddCmd = &cobra.Command{
 		if err := cfg.Save(); err != nil {
 			return err
 		}
-		fmt.Printf("Layout criado: %s\n", l.ID)
+		fmt.Printf(i18n.T("Layout created: %s\n"), l.ID)
 		return nil
 	},
 }
 
 var layoutTabCmd = &cobra.Command{
-	Use:   "tab <layoutId>",
-	Short: "Adiciona uma aba ao layout",
+	Use:   i18n.T("tab <layoutId>"),
+	Short: i18n.T("Add a tab to the layout"),
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg, err := config.Load()
@@ -76,20 +77,20 @@ var layoutTabCmd = &cobra.Command{
 		}
 		l, ok := cfg.FindLayout(args[0])
 		if !ok {
-			return fmt.Errorf("layout não encontrado: %s", args[0])
+			return fmt.Errorf(i18n.T("layout not found: %s"), args[0])
 		}
 		l.Tabs = append(l.Tabs, config.Tab{Title: layoutTabTtl})
 		if err := cfg.Save(); err != nil {
 			return err
 		}
-		fmt.Printf("Aba %d adicionada ao layout %s.\n", len(l.Tabs), l.ID)
+		fmt.Printf(i18n.T("Tab %d added to layout %s.\n"), len(l.Tabs), l.ID)
 		return nil
 	},
 }
 
 var layoutPaneCmd = &cobra.Command{
-	Use:   "pane <layoutId>",
-	Short: "Adiciona um painel a uma aba do layout",
+	Use:   i18n.T("pane <layoutId>"),
+	Short: i18n.T("Add a pane to a tab in the layout"),
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		shell, err := validateLayoutShell(paneShell)
@@ -102,14 +103,14 @@ var layoutPaneCmd = &cobra.Command{
 		}
 		l, ok := cfg.FindLayout(args[0])
 		if !ok {
-			return fmt.Errorf("layout não encontrado: %s", args[0])
+			return fmt.Errorf(i18n.T("layout not found: %s"), args[0])
 		}
 		if paneTab < 1 || paneTab > len(l.Tabs) {
-			return fmt.Errorf("aba %d inválida (o layout tem %d aba(s))", paneTab, len(l.Tabs))
+			return fmt.Errorf(i18n.T("invalid tab %d (the layout has %d tab(s))"), paneTab, len(l.Tabs))
 		}
 		split := paneSplit
 		if split != "" && split != "H" && split != "V" {
-			return fmt.Errorf("split inválido %q (use H ou V)", split)
+			return fmt.Errorf(i18n.T("invalid split %q (use H or V)"), split)
 		}
 		l.Tabs[paneTab-1].Panes = append(l.Tabs[paneTab-1].Panes, config.Pane{
 			Shell: shell, Command: paneCommandF, Dir: paneDir, Split: split,
@@ -117,15 +118,15 @@ var layoutPaneCmd = &cobra.Command{
 		if err := cfg.Save(); err != nil {
 			return err
 		}
-		fmt.Printf("Painel adicionado à aba %d do layout %s.\n", paneTab, l.ID)
+		fmt.Printf(i18n.T("Pane added to tab %d of layout %s.\n"), paneTab, l.ID)
 		return nil
 	},
 }
 
 var layoutRmCmd = &cobra.Command{
-	Use:     "rm <layoutId>",
+	Use:     i18n.T("rm <layoutId>"),
 	Aliases: []string{"remove"},
-	Short:   "Remove um layout",
+	Short:   i18n.T("Remove a layout"),
 	Args:    cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg, err := config.Load()
@@ -133,19 +134,19 @@ var layoutRmCmd = &cobra.Command{
 			return err
 		}
 		if !cfg.RemoveLayout(args[0]) {
-			return fmt.Errorf("layout não encontrado: %s", args[0])
+			return fmt.Errorf(i18n.T("layout not found: %s"), args[0])
 		}
 		if err := cfg.Save(); err != nil {
 			return err
 		}
-		fmt.Printf("Layout removido: %s\n", args[0])
+		fmt.Printf(i18n.T("Layout removed: %s\n"), args[0])
 		return nil
 	},
 }
 
 var layoutAssignCmd = &cobra.Command{
-	Use:   "assign <layoutId> <projId>",
-	Short: "Define o layout padrão de um projeto",
+	Use:   i18n.T("assign <layoutId> <projId>"),
+	Short: i18n.T("Set the default layout for a project"),
 	Args:  cobra.ExactArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg, err := config.Load()
@@ -153,24 +154,24 @@ var layoutAssignCmd = &cobra.Command{
 			return err
 		}
 		if _, ok := cfg.FindLayout(args[0]); !ok {
-			return fmt.Errorf("layout não encontrado: %s", args[0])
+			return fmt.Errorf(i18n.T("layout not found: %s"), args[0])
 		}
 		p, ok := cfg.FindProject(args[1])
 		if !ok {
-			return fmt.Errorf("projeto não encontrado: %s", args[1])
+			return fmt.Errorf(i18n.T("project not found: %s"), args[1])
 		}
 		p.LayoutID = args[0]
 		if err := cfg.Save(); err != nil {
 			return err
 		}
-		fmt.Printf("Projeto %s agora abre com o layout %s.\n", p.ID, args[0])
+		fmt.Printf(i18n.T("Project %s will now open with layout %s.\n"), p.ID, args[0])
 		return nil
 	},
 }
 
 var layoutShowCmd = &cobra.Command{
-	Use:   "show <layoutId>",
-	Short: "Mostra o comando wt que o layout geraria",
+	Use:   i18n.T("show <layoutId>"),
+	Short: i18n.T("Show the wt command that the layout would generate"),
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg, err := config.Load()
@@ -179,13 +180,13 @@ var layoutShowCmd = &cobra.Command{
 		}
 		l, ok := cfg.FindLayout(args[0])
 		if !ok {
-			return fmt.Errorf("layout não encontrado: %s", args[0])
+			return fmt.Errorf(i18n.T("layout not found: %s"), args[0])
 		}
-		project := config.Project{Name: "<projeto>", Path: "<dir-do-projeto>"}
+		project := config.Project{Name: "<project>", Path: "<project-dir>"}
 		if showProjectID != "" {
 			p, ok := cfg.FindProject(showProjectID)
 			if !ok {
-				return fmt.Errorf("projeto não encontrado: %s", showProjectID)
+				return fmt.Errorf(i18n.T("project not found: %s"), showProjectID)
 			}
 			project = *p
 		}
@@ -203,18 +204,18 @@ func validateLayoutShell(s string) (config.Shell, error) {
 	case config.ShellClaude, config.ShellPwsh, config.ShellCmd, config.ShellBash, config.ShellZsh:
 		return config.Shell(s), nil
 	}
-	return "", fmt.Errorf("shell inválido %q (use: claude, pwsh, cmd, bash, zsh)", s)
+	return "", fmt.Errorf(i18n.T("invalid shell %q (use: claude, pwsh, cmd, bash, zsh)"), s)
 }
 
 func init() {
-	layoutAddCmd.Flags().StringVar(&layoutPreset, "preset", "", "preset inicial: claude|dev|triple")
-	layoutTabCmd.Flags().StringVar(&layoutTabTtl, "title", "", "título da aba")
-	layoutPaneCmd.Flags().IntVar(&paneTab, "tab", 1, "número da aba (1-based)")
-	layoutPaneCmd.Flags().StringVar(&paneShell, "shell", "", "shell do painel: claude|pwsh|cmd|bash|zsh")
-	layoutPaneCmd.Flags().StringVar(&paneCommandF, "command", "", "comando a rodar no painel")
-	layoutPaneCmd.Flags().StringVar(&paneSplit, "split", "V", "divisão a partir do painel anterior: H|V")
-	layoutPaneCmd.Flags().StringVar(&paneDir, "dir", "", "cwd do painel (vazio = dir do projeto)")
-	layoutShowCmd.Flags().StringVar(&showProjectID, "project", "", "projeto p/ preencher os caminhos")
+	layoutAddCmd.Flags().StringVar(&layoutPreset, "preset", "", i18n.T("initial preset: claude|dev|triple"))
+	layoutTabCmd.Flags().StringVar(&layoutTabTtl, "title", "", i18n.T("tab title"))
+	layoutPaneCmd.Flags().IntVar(&paneTab, "tab", 1, i18n.T("tab number (1-based)"))
+	layoutPaneCmd.Flags().StringVar(&paneShell, "shell", "", i18n.T("pane shell: claude|pwsh|cmd|bash|zsh"))
+	layoutPaneCmd.Flags().StringVar(&paneCommandF, "command", "", i18n.T("command to run in the pane"))
+	layoutPaneCmd.Flags().StringVar(&paneSplit, "split", "V", i18n.T("split from previous pane: H|V"))
+	layoutPaneCmd.Flags().StringVar(&paneDir, "dir", "", i18n.T("pane cwd (empty = project dir)"))
+	layoutShowCmd.Flags().StringVar(&showProjectID, "project", "", i18n.T("project to fill in paths"))
 
 	layoutCmd.AddCommand(layoutAddCmd, layoutTabCmd, layoutPaneCmd, layoutRmCmd, layoutAssignCmd, layoutShowCmd)
 	rootCmd.AddCommand(layoutCmd)

@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"harnessbeaver/internal/i18n"
 	"harnessbeaver/internal/journal"
 )
 
@@ -19,9 +20,9 @@ var (
 
 var historyCmd = &cobra.Command{
 	Use:   "history",
-	Short: "Lista o histórico de comandos do diário (com filtros)",
-	Long: `Mostra os comandos registrados nos últimos --days dias, do mais recente
-para o mais antigo. Filtre por projeto, texto ou apenas os que falharam.`,
+	Short: i18n.T("List command history from the journal (with filters)"),
+	Long: i18n.T(`Shows commands recorded in the last --days days, from most recent
+to oldest. Filter by project, text, or only those that failed.`),
 	Args: cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		to := journal.Today()
@@ -37,7 +38,7 @@ para o mais antigo. Filtre por projeto, texto ou apenas os que falharam.`,
 			FailedOnly: histFailed,
 		})
 		if len(entries) == 0 {
-			fmt.Println("Nenhuma entrada no histórico para os filtros dados.")
+			fmt.Println(i18n.T("No history entries for the given filters."))
 			return nil
 		}
 
@@ -58,10 +59,10 @@ para o mais antigo. Filtre por projeto, texto ou apenas os que falharam.`,
 }
 
 func init() {
-	historyCmd.Flags().StringVar(&histProject, "project", "", "filtra por id de projeto")
-	historyCmd.Flags().StringVar(&histGrep, "grep", "", "filtra por texto no comando")
-	historyCmd.Flags().BoolVar(&histFailed, "failed", false, "apenas comandos com exit != 0")
-	historyCmd.Flags().IntVar(&histDays, "days", 7, "quantos dias para trás")
-	historyCmd.Flags().IntVar(&histLimit, "limit", 50, "máximo de entradas exibidas")
+	historyCmd.Flags().StringVar(&histProject, "project", "", i18n.T("filter by project id"))
+	historyCmd.Flags().StringVar(&histGrep, "grep", "", i18n.T("filter by text in command"))
+	historyCmd.Flags().BoolVar(&histFailed, "failed", false, i18n.T("only commands with exit != 0"))
+	historyCmd.Flags().IntVar(&histDays, "days", 7, i18n.T("how many days back"))
+	historyCmd.Flags().IntVar(&histLimit, "limit", 50, i18n.T("maximum number of entries shown"))
 	rootCmd.AddCommand(historyCmd)
 }

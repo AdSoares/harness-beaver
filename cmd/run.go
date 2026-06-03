@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"harnessbeaver/internal/config"
+	"harnessbeaver/internal/i18n"
 	"harnessbeaver/internal/journal"
 	"harnessbeaver/internal/runner"
 )
@@ -15,14 +16,9 @@ import (
 var runShell string
 
 var runCmd = &cobra.Command{
-	Use:   "run <comando...>",
-	Short: "Executa um comando (pwsh/cmd) e registra no diário",
-	Long: `Executa um comando em nome do usuário no PowerShell (default) ou cmd e
-registra comando + saída no diário de bordo (~/.harnessbeaver/logs).
-
-Flags devem vir antes do comando. Exemplos:
-  bvr run echo ola
-  bvr run --shell cmd "echo oi & dir"`,
+	Use:                i18n.T("run <command...>"),
+	Short:              i18n.T("Execute a command (pwsh/cmd) and record it in the journal"),
+	Long:               i18n.T("Execute a command on behalf of the user in PowerShell (default) or cmd and\nrecord the command + output in the journal (~/.harnessbeaver/logs).\n\nFlags must come before the command. Examples:\n  bvr run echo hello\n  bvr run --shell cmd \"echo hi & dir\""),
 	Args:               cobra.MinimumNArgs(1),
 	DisableFlagParsing: false,
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -53,7 +49,7 @@ Flags devem vir antes do comando. Exemplos:
 // printPendingHint avisa (em stderr, sem bloquear) se há dia anterior sem análise.
 func printPendingHint() {
 	if d, _ := journal.PendingReviewDate(); d != "" {
-		fmt.Fprintf(os.Stderr, "Dica: há log de %s não analisado — rode 'bvr review'.\n", d)
+		fmt.Fprintf(os.Stderr, i18n.T("Hint: there is an unanalysed log for %s — run 'bvr review'.\n"), d)
 	}
 }
 
@@ -65,11 +61,11 @@ func validateRunShell(s string) (config.Shell, error) {
 			return v, nil
 		}
 	}
-	return "", fmt.Errorf("shell inválido %q (use: pwsh, cmd, bash, zsh)", s)
+	return "", fmt.Errorf(i18n.T("invalid shell %q (use: pwsh, cmd, bash, zsh)"), s)
 }
 
 func init() {
 	runCmd.Flags().SetInterspersed(false)
-	runCmd.Flags().StringVar(&runShell, "shell", "", "shell de execução: pwsh|cmd|bash|zsh")
+	runCmd.Flags().StringVar(&runShell, "shell", "", i18n.T("execution shell: pwsh|cmd|bash|zsh"))
 	rootCmd.AddCommand(runCmd)
 }

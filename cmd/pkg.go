@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"harnessbeaver/internal/config"
+	"harnessbeaver/internal/i18n"
 )
 
 var (
@@ -17,12 +18,12 @@ var (
 
 var pkgCmd = &cobra.Command{
 	Use:   "pkg",
-	Short: "Gerencia pacotes (grupos de projetos)",
+	Short: i18n.T("Manage packages (groups of projects)"),
 }
 
 var pkgAddCmd = &cobra.Command{
-	Use:   "add <nome>",
-	Short: "Cria um pacote com os projetos indicados",
+	Use:   i18n.T("add <name>"),
+	Short: i18n.T("Create a package with the given projects"),
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		mode, err := validateMode(pkgMode)
@@ -39,11 +40,11 @@ var pkgAddCmd = &cobra.Command{
 		}
 		ids := splitCSV(pkgProjects)
 		if len(ids) == 0 {
-			return fmt.Errorf("informe --projects id1,id2,...")
+			return i18n.Errorf("provide --projects id1,id2,...")
 		}
 		for _, id := range ids {
 			if _, ok := cfg.FindProject(id); !ok {
-				return fmt.Errorf("projeto não encontrado: %s", id)
+				return fmt.Errorf(i18n.T("project not found: %s"), id)
 			}
 		}
 		pk, err := cfg.AddPackage(args[0], ids, mode, shell)
@@ -53,15 +54,15 @@ var pkgAddCmd = &cobra.Command{
 		if err := cfg.Save(); err != nil {
 			return err
 		}
-		fmt.Printf("Pacote criado: %s (%d projetos)\n", pk.ID, len(pk.ProjectIDs))
+		fmt.Printf(i18n.T("Package created: %s (%d projects)\n"), pk.ID, len(pk.ProjectIDs))
 		return nil
 	},
 }
 
 var pkgRemoveCmd = &cobra.Command{
-	Use:     "remove <pkgId>",
+	Use:     i18n.T("remove <pkgId>"),
 	Aliases: []string{"rm"},
-	Short:   "Remove um pacote",
+	Short:   i18n.T("Remove a package"),
 	Args:    cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg, err := config.Load()
@@ -69,12 +70,12 @@ var pkgRemoveCmd = &cobra.Command{
 			return err
 		}
 		if !cfg.RemovePackage(args[0]) {
-			return fmt.Errorf("pacote não encontrado: %s", args[0])
+			return fmt.Errorf(i18n.T("package not found: %s"), args[0])
 		}
 		if err := cfg.Save(); err != nil {
 			return err
 		}
-		fmt.Printf("Pacote removido: %s\n", args[0])
+		fmt.Printf(i18n.T("Package removed: %s\n"), args[0])
 		return nil
 	},
 }
@@ -91,9 +92,9 @@ func splitCSV(s string) []string {
 }
 
 func init() {
-	pkgAddCmd.Flags().StringVar(&pkgProjects, "projects", "", "ids de projetos separados por vírgula")
-	pkgAddCmd.Flags().StringVar(&pkgMode, "mode", "", "modo do pacote: tabs|windows")
-	pkgAddCmd.Flags().StringVar(&pkgShell, "shell", "", "shell do pacote: claude|pwsh|cmd")
+	pkgAddCmd.Flags().StringVar(&pkgProjects, "projects", "", i18n.T("comma-separated project ids"))
+	pkgAddCmd.Flags().StringVar(&pkgMode, "mode", "", i18n.T("package mode: tabs|windows"))
+	pkgAddCmd.Flags().StringVar(&pkgShell, "shell", "", i18n.T("package shell: claude|pwsh|cmd"))
 	pkgCmd.AddCommand(pkgAddCmd, pkgRemoveCmd)
 	rootCmd.AddCommand(pkgCmd)
 }

@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"harnessbeaver/internal/config"
+	"harnessbeaver/internal/i18n"
 )
 
 // DateLayout é o formato de data usado nos nomes de arquivo (AAAA-MM-DD).
@@ -250,5 +251,5 @@ func truncate(s string) string {
 	if len(s) <= MaxCapture {
 		return s
 	}
-	return s[:MaxCapture] + "\n…[truncado]"
+	return s[:MaxCapture] + i18n.T("\n…[truncated]")
 }

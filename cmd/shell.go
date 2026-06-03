@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"harnessbeaver/internal/config"
+	"harnessbeaver/internal/i18n"
 	"harnessbeaver/internal/insights"
 	"harnessbeaver/internal/journal"
 	"harnessbeaver/internal/runner"
@@ -19,10 +20,9 @@ var shellShell string
 
 var shellCmd = &cobra.Command{
 	Use:   "shell",
-	Short: "REPL que executa e registra comandos (pwsh/cmd)",
-	Long: `Abre uma sessão interativa: cada linha digitada é executada no shell
-escolhido e registrada no diário. Digite 'exit' ou 'quit' (ou Ctrl+D) para sair.`,
-	Args: cobra.NoArgs,
+	Short: i18n.T("REPL that executes and records commands (pwsh/cmd)"),
+	Long:  i18n.T("Open an interactive session: each line typed is executed in the chosen\nshell and recorded in the journal. Type 'exit' or 'quit' (or Ctrl+D) to leave."),
+	Args:  cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg, err := config.Load()
 		if err != nil {
@@ -40,7 +40,7 @@ escolhido e registrada no diário. Digite 'exit' ou 'quit' (ou Ctrl+D) para sair
 		reader := bufio.NewReader(os.Stdin)
 		offerPendingReview(cfg, reader)
 
-		fmt.Printf("bvr shell — %s. Comandos são registrados no diário. 'exit' para sair.\n", shell)
+		fmt.Printf(i18n.T("bvr shell — %s. Commands are recorded in the journal. 'exit' to quit.\n"), shell)
 		for {
 			fmt.Printf("bvr[%s]> ", shell)
 			line, err := reader.ReadString('\n')
@@ -59,7 +59,7 @@ escolhido e registrada no diário. Digite 'exit' ou 'quit' (ou Ctrl+D) para sair
 				break
 			}
 			if _, err := runner.Run(shell, command, "", true); err != nil {
-				fmt.Fprintln(os.Stderr, "erro:", err)
+				fmt.Fprintln(os.Stderr, i18n.T("error:"), err)
 			}
 		}
 		return nil
@@ -76,20 +76,20 @@ func offerPendingReview(cfg *config.Config, reader *bufio.Reader) {
 	if d == "" {
 		return
 	}
-	fmt.Printf("Há log de %s ainda não analisado. Analisar agora? [s/N] ", d)
+	fmt.Printf(i18n.T("There is an unanalysed log for %s. Analyse now? [y/N] "), d)
 	ans, _ := reader.ReadString('\n')
 	markOffered(cfg)
-	if strings.EqualFold(strings.TrimSpace(ans), "s") {
+	if strings.EqualFold(strings.TrimSpace(ans), "y") {
 		_, path, err := insights.Analyze(cfg, d, false)
 		if err != nil {
-			fmt.Fprintln(os.Stderr, "falha na análise:", err)
+			fmt.Fprintln(os.Stderr, i18n.T("analysis failed:"), err)
 			return
 		}
-		fmt.Printf("Análise salva em: %s\n", path)
+		fmt.Printf(i18n.T("Analysis saved to: %s\n"), path)
 	}
 }
 
 func init() {
-	shellCmd.Flags().StringVar(&shellShell, "shell", "", "shell de execução: pwsh|cmd|bash|zsh")
+	shellCmd.Flags().StringVar(&shellShell, "shell", "", i18n.T("execution shell: pwsh|cmd|bash|zsh"))
 	rootCmd.AddCommand(shellCmd)
 }

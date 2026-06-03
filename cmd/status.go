@@ -7,13 +7,13 @@ import (
 
 	"harnessbeaver/internal/config"
 	"harnessbeaver/internal/gitstatus"
+	"harnessbeaver/internal/i18n"
 )
 
 var statusCmd = &cobra.Command{
 	Use:   "status [pkgId|projId ...]",
-	Short: "Mostra o status git dos projetos (branch, alterações, ahead/behind)",
-	Long: `Sem argumentos, mostra o status git de todos os projetos registrados.
-Com ids de projeto e/ou pacote, restringe a esses. As consultas rodam em paralelo.`,
+	Short: i18n.T("Show git status of projects (branch, changes, ahead/behind)"),
+	Long:  i18n.T("With no arguments, shows the git status of all registered projects.\nWith project and/or package ids, restricts to those. Queries run in parallel."),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg, err := config.Load()
 		if err != nil {
@@ -24,7 +24,7 @@ Com ids de projeto e/ou pacote, restringe a esses. As consultas rodam em paralel
 			return err
 		}
 		if len(projects) == 0 {
-			fmt.Println("Nenhum projeto registrado.")
+			fmt.Println(i18n.T("No registered projects."))
 			return nil
 		}
 
@@ -37,7 +37,7 @@ Com ids de projeto e/ou pacote, restringe a esses. As consultas rodam em paralel
 		for _, p := range projects {
 			label := res[p.Path].Label()
 			if label == "" {
-				label = "(não é repositório git)"
+				label = i18n.T("(not a git repository)")
 			}
 			fmt.Printf("  %-20s %-30s %s\n", p.ID, label, p.Path)
 		}
@@ -70,7 +70,7 @@ func collectProjects(cfg *config.Config, args []string) ([]config.Project, error
 			add(*p)
 			continue
 		}
-		return nil, fmt.Errorf("id não encontrado (projeto ou pacote): %s", a)
+		return nil, fmt.Errorf(i18n.T("id not found (project or package): %s"), a)
 	}
 	return out, nil
 }

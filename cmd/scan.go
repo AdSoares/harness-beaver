@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"harnessbeaver/internal/config"
+	"harnessbeaver/internal/i18n"
 	"harnessbeaver/internal/scanner"
 )
 
@@ -20,10 +21,8 @@ var (
 
 var scanCmd = &cobra.Command{
 	Use:   "scan",
-	Short: "Escaneia um diretório em busca de projetos de código",
-	Long: `Escaneia o diretório raiz (--root, ou settings.scanRoot, ou o diretório
-atual) e lista subdiretórios que parecem projetos de código. Com --import, grava
-no registro todos os candidatos ainda não cadastrados.`,
+	Short: i18n.T("Scan a directory for code projects"),
+	Long:  i18n.T("Scan the root directory (--root, or settings.scanRoot, or the current\ndirectory) and list subdirectories that look like code projects. With --import,\nrecords all candidates not yet registered."),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg, err := config.Load()
 		if err != nil {
@@ -53,7 +52,7 @@ no registro todos os candidatos ainda não cadastrados.`,
 			candidates = append(candidates, scanner.Groups(candidates, root)...)
 		}
 		if len(candidates) == 0 {
-			fmt.Printf("Nenhum projeto de código encontrado em %s\n", root)
+			fmt.Printf(i18n.T("No code projects found in %s\n"), root)
 			return nil
 		}
 
@@ -62,7 +61,7 @@ no registro todos os candidatos ainda não cadastrados.`,
 			exists := projectExistsAtPath(cfg, c.Path)
 			tag := ""
 			if exists {
-				tag = " (já cadastrado)"
+				tag = i18n.T(" (already registered)")
 			}
 			fmt.Printf("  %-28s %s  [%s]%s\n", c.Name, c.Path, strings.Join(c.Markers, ","), tag)
 			if scanImport && !exists {
@@ -77,9 +76,9 @@ no registro todos os candidatos ainda não cadastrados.`,
 			}
 		}
 		if scanImport {
-			fmt.Printf("\n%d projeto(s) importado(s).\n", imported)
+			fmt.Printf(i18n.T("\n%d project(s) imported.\n"), imported)
 		} else {
-			fmt.Printf("\n%d candidato(s). Use --import para gravar.\n", len(candidates))
+			fmt.Printf(i18n.T("\n%d candidate(s). Use --import to register.\n"), len(candidates))
 		}
 		return nil
 	},
@@ -95,9 +94,9 @@ func projectExistsAtPath(cfg *config.Config, path string) bool {
 }
 
 func init() {
-	scanCmd.Flags().StringVar(&scanRoot, "root", "", "diretório raiz a escanear")
-	scanCmd.Flags().BoolVar(&scanImport, "import", false, "importa os candidatos novos")
-	scanCmd.Flags().BoolVar(&scanGroups, "groups", false, "também oferece diretórios-pai que agrupam ≥2 projetos")
-	scanCmd.Flags().IntVar(&scanDepth, "depth", scanner.DefaultDepth, "profundidade máxima")
+	scanCmd.Flags().StringVar(&scanRoot, "root", "", i18n.T("root directory to scan"))
+	scanCmd.Flags().BoolVar(&scanImport, "import", false, i18n.T("import new candidates"))
+	scanCmd.Flags().BoolVar(&scanGroups, "groups", false, i18n.T("also offer parent directories that group ≥2 projects"))
+	scanCmd.Flags().IntVar(&scanDepth, "depth", scanner.DefaultDepth, i18n.T("maximum depth"))
 	rootCmd.AddCommand(scanCmd)
 }

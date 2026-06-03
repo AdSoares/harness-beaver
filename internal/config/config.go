@@ -10,6 +10,8 @@ import (
 	"regexp"
 	"runtime"
 	"strings"
+
+	"harnessbeaver/internal/i18n"
 )
 
 // Shell é o programa que roda dentro de cada aba/janela aberta.
@@ -104,6 +106,8 @@ type Settings struct {
 	UpgradeSource     string `json:"upgradeSource"`     // URL ou caminho de onde baixar o binário novo
 
 	TabColors bool `json:"tabColors"` // cor diferente por aba/janela aberta
+
+	Language string `json:"language,omitempty"` // idioma da interface: "en" (default) | "pt"
 }
 
 // Config é a raiz serializada para o config.json.
@@ -165,6 +169,7 @@ func Default() *Config {
 			DefaultRunShell: DefaultRunShellForOS(),
 			InsightsEngine:  "auto",
 			InsightsModel:   "claude-sonnet-4-6",
+			Language:        "en",
 		},
 		Projects: []Project{},
 		Packages: []Package{},
@@ -191,7 +196,7 @@ func Load() (*Config, error) {
 	}
 	var cfg Config
 	if err := json.Unmarshal(data, &cfg); err != nil {
-		return nil, fmt.Errorf("config.json inválido: %w", err)
+		return nil, fmt.Errorf(i18n.T("invalid config.json: %w"), err)
 	}
 	if cfg.Version == 0 {
 		cfg.Version = currentVersion
@@ -211,6 +216,9 @@ func Load() (*Config, error) {
 	}
 	if cfg.Settings.InsightsModel == "" {
 		cfg.Settings.InsightsModel = "claude-sonnet-4-6"
+	}
+	if cfg.Settings.Language == "" {
+		cfg.Settings.Language = "en"
 	}
 	if cfg.Aliases == nil {
 		cfg.Aliases = map[string]string{}
@@ -264,10 +272,10 @@ func (c *Config) AddProject(name, path string, shell Shell) (*Project, error) {
 	}
 	info, err := os.Stat(abs)
 	if err != nil {
-		return nil, fmt.Errorf("caminho inválido: %w", err)
+		return nil, fmt.Errorf(i18n.T("invalid path: %w"), err)
 	}
 	if !info.IsDir() {
-		return nil, fmt.Errorf("o caminho não é um diretório: %s", abs)
+		return nil, fmt.Errorf(i18n.T("path is not a directory: %s"), abs)
 	}
 	if name == "" {
 		name = filepath.Base(abs)
@@ -381,7 +389,7 @@ func (c *Config) FindLayout(id string) (*Layout, bool) {
 // AddLayout cria um layout a partir de um preset ("", "claude", "dev", "triple").
 func (c *Config) AddLayout(name, preset string) (*Layout, error) {
 	if name == "" {
-		return nil, fmt.Errorf("nome do layout é obrigatório")
+		return nil, i18n.Errorf("layout name is required")
 	}
 	id := uniqueID(slug(name), func(id string) bool {
 		_, ok := c.FindLayout(id)
@@ -467,7 +475,7 @@ func (c *Config) FindPackage(id string) (*Package, bool) {
 // AddPackage cria um pacote com id único.
 func (c *Config) AddPackage(name string, projectIDs []string, mode Mode, shell Shell) (*Package, error) {
 	if name == "" {
-		return nil, fmt.Errorf("nome do pacote é obrigatório")
+		return nil, i18n.Errorf("package name is required")
 	}
 	id := uniqueID(slug(name), func(id string) bool {
 		_, ok := c.FindPackage(id)

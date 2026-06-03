@@ -16,6 +16,7 @@ import (
 
 	"harnessbeaver/internal/config"
 	"harnessbeaver/internal/gitstatus"
+	"harnessbeaver/internal/i18n"
 	"harnessbeaver/internal/insights"
 	"harnessbeaver/internal/journal"
 	"harnessbeaver/internal/launcher"
@@ -66,12 +67,12 @@ type model struct {
 	errMsg string
 
 	// scratch do fluxo em andamento
-	openProjects []config.Project
-	openMode     config.Mode
-	pkgName      string
-	pkgProjects  []string
-	pkgMode      config.Mode
-	newProjName  string
+	openProjects   []config.Project
+	openMode       config.Mode
+	pkgName        string
+	pkgProjects    []string
+	pkgMode        config.Mode
+	newProjName    string
 	execTitle      string
 	execOutput     string
 	reviewDate     string
@@ -124,7 +125,7 @@ func Run(cfg *config.Config) error {
 	sp.Style = cursorStyle
 	m := model{
 		cfg:      cfg,
-		menu:     newPicker("HarnessBeaver — menu", mainMenuItems(), false),
+		menu:     newPicker(i18n.T("HarnessBeaver — menu"), mainMenuItems(), false),
 		spinner:  sp,
 		gitCache: map[string]gitstatus.Status{},
 	}
@@ -134,8 +135,8 @@ func Run(cfg *config.Config) error {
 		if d, _ := journal.PendingReviewDate(); d != "" {
 			m.reviewDate = d
 			m.pick = newPicker(
-				fmt.Sprintf("Há log de %s ainda não analisado. Analisar aprendizados agora?", d),
-				[]pickItem{{id: "yes", label: "Sim, analisar"}, {id: "no", label: "Agora não"}},
+				fmt.Sprintf(i18n.T("There is an unanalyzed log from %s. Analyze learnings now?"), d),
+				[]pickItem{{id: "yes", label: i18n.T("Yes, analyze")}, {id: "no", label: i18n.T("Not now")}},
 				false,
 			)
 			m.screen = scReviewOffer
@@ -150,20 +151,20 @@ func (m model) Init() tea.Cmd { return nil }
 
 func mainMenuItems() []pickItem {
 	return []pickItem{
-		{id: "open", label: "Abrir projetos"},
-		{id: "openpkg", label: "Abrir pacote"},
-		{id: "openlayout", label: "Abrir com layout"},
-		{id: "addproj", label: "Adicionar projeto"},
-		{id: "rmproj", label: "Remover projeto"},
-		{id: "scan", label: "Escanear & importar"},
-		{id: "addpkg", label: "Criar pacote"},
-		{id: "rmpkg", label: "Remover pacote"},
-		{id: "exec", label: "Executar comando"},
-		{id: "history", label: "Histórico"},
-		{id: "aliases", label: "Atalhos"},
-		{id: "review", label: "Analisar aprendizados"},
-		{id: "config", label: "Configurações"},
-		{id: "quit", label: "Sair"},
+		{id: "open", label: i18n.T("Open projects")},
+		{id: "openpkg", label: i18n.T("Open package")},
+		{id: "openlayout", label: i18n.T("Open with layout")},
+		{id: "addproj", label: i18n.T("Add project")},
+		{id: "rmproj", label: i18n.T("Remove project")},
+		{id: "scan", label: i18n.T("Scan & import")},
+		{id: "addpkg", label: i18n.T("Create package")},
+		{id: "rmpkg", label: i18n.T("Remove package")},
+		{id: "exec", label: i18n.T("Execute command")},
+		{id: "history", label: i18n.T("History")},
+		{id: "aliases", label: i18n.T("Aliases")},
+		{id: "review", label: i18n.T("Analyze learnings")},
+		{id: "config", label: i18n.T("Settings")},
+		{id: "quit", label: i18n.T("Quit")},
 	}
 }
 
@@ -224,7 +225,7 @@ func (m *model) gitLoadForPick() tea.Cmd {
 func (m model) packageItems() []pickItem {
 	items := make([]pickItem, 0, len(m.cfg.Packages))
 	for _, pk := range m.cfg.Packages {
-		desc := fmt.Sprintf("%d projeto(s)", len(pk.ProjectIDs))
+		desc := fmt.Sprintf(i18n.T("%d project(s)"), len(pk.ProjectIDs))
 		items = append(items, pickItem{id: pk.ID, label: pk.Name, desc: desc})
 	}
 	return items
@@ -233,11 +234,11 @@ func (m model) packageItems() []pickItem {
 func modeItems(includeDefault bool) []pickItem {
 	var items []pickItem
 	if includeDefault {
-		items = append(items, pickItem{id: "", label: "(usar default global)"})
+		items = append(items, pickItem{id: "", label: i18n.T("(use global default)")})
 	}
 	items = append(items,
-		pickItem{id: string(config.ModeTabs), label: "Abas (uma janela, uma aba por projeto)"},
-		pickItem{id: string(config.ModeWindows), label: "Janelas separadas"},
+		pickItem{id: string(config.ModeTabs), label: i18n.T("Tabs (one window, one tab per project)")},
+		pickItem{id: string(config.ModeWindows), label: i18n.T("Separate windows")},
 	)
 	return items
 }
@@ -245,7 +246,7 @@ func modeItems(includeDefault bool) []pickItem {
 func shellItems(includeDefault bool) []pickItem {
 	var items []pickItem
 	if includeDefault {
-		items = append(items, pickItem{id: "", label: "(usar default)"})
+		items = append(items, pickItem{id: "", label: i18n.T("(use default)")})
 	}
 	items = append(items,
 		pickItem{id: string(config.ShellClaude), label: "Claude Code"},
@@ -284,11 +285,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, cmd
 	case analyzeDoneMsg:
 		if msg.err != nil {
-			m.execTitle = "Falha na análise — " + msg.date
+			m.execTitle = i18n.T("Analysis failed — ") + msg.date
 			m.execOutput = errStyle.Render(msg.err.Error())
 		} else {
-			m.execTitle = "Aprendizados de " + msg.date
-			m.execOutput = statusStyle.Render("Salvo em: "+msg.path) + "\n\n" + msg.md
+			m.execTitle = i18n.T("Learnings from ") + msg.date
+			m.execOutput = statusStyle.Render(i18n.T("Saved to: ")+msg.path) + "\n\n" + msg.md
 		}
 		m.screen = scExecResult
 		return m, nil
@@ -454,7 +455,7 @@ func (m model) onEnter() (tea.Model, tea.Cmd) {
 	case scOpenPick:
 		picked := m.pick.checked()
 		if len(picked) == 0 {
-			m.errMsg = "Selecione ao menos um projeto (espaço)."
+			m.errMsg = i18n.T("Select at least one project (space).")
 			return m, nil
 		}
 		m.openProjects = nil
@@ -467,12 +468,12 @@ func (m model) onEnter() (tea.Model, tea.Cmd) {
 		m.screen = scOpenConfirm
 		return m, nil
 	case scOpenConfirm:
-		m.pick = newPicker("Modo de abertura", modeItems(false), false)
+		m.pick = newPicker(i18n.T("Open mode"), modeItems(false), false)
 		m.screen = scOpenMode
 		return m, nil
 	case scOpenMode:
 		m.openMode = config.Mode(m.pick.selectedID())
-		m.pick = newPicker("Shell em cada aba", shellItems(false), false)
+		m.pick = newPicker(i18n.T("Shell for each tab"), shellItems(false), false)
 		m.screen = scOpenShell
 		return m, nil
 	case scOpenShell:
@@ -490,7 +491,7 @@ func (m model) onEnter() (tea.Model, tea.Cmd) {
 	case scPkgOpenPick:
 		pk, ok := m.cfg.FindPackage(m.pick.selectedID())
 		if !ok {
-			m.errMsg = "Pacote não encontrado."
+			m.errMsg = i18n.T("Package not found.")
 			return m, nil
 		}
 		mode := m.cfg.Settings.DefaultMode
@@ -511,7 +512,7 @@ func (m model) onEnter() (tea.Model, tea.Cmd) {
 	case scProjRemove:
 		id := m.pick.selectedID()
 		if m.cfg.RemoveProject(id) {
-			m.save("Projeto removido: " + id)
+			m.save(i18n.T("Project removed: ") + id)
 		}
 		m.toMenu()
 		return m, nil
@@ -523,25 +524,25 @@ func (m model) onEnter() (tea.Model, tea.Cmd) {
 				n++
 			}
 		}
-		m.save(fmt.Sprintf("%d projeto(s) importado(s).", n))
+		m.save(fmt.Sprintf(i18n.T("%d project(s) imported."), n))
 		m.toMenu()
 		return m, nil
 	case scPkgAddPick:
 		picked := m.pick.checked()
 		if len(picked) == 0 {
-			m.errMsg = "Selecione ao menos um projeto."
+			m.errMsg = i18n.T("Select at least one project.")
 			return m, nil
 		}
 		m.pkgProjects = nil
 		for _, it := range picked {
 			m.pkgProjects = append(m.pkgProjects, it.id)
 		}
-		m.pick = newPicker("Modo do pacote", modeItems(true), false)
+		m.pick = newPicker(i18n.T("Package mode"), modeItems(true), false)
 		m.screen = scPkgAddMode
 		return m, nil
 	case scPkgAddMode:
 		m.pkgMode = config.Mode(m.pick.selectedID())
-		m.pick = newPicker("Shell do pacote", shellItems(true), false)
+		m.pick = newPicker(i18n.T("Package shell"), shellItems(true), false)
 		m.screen = scPkgAddShell
 		return m, nil
 	case scPkgAddShell:
@@ -551,13 +552,13 @@ func (m model) onEnter() (tea.Model, tea.Cmd) {
 			m.toMenu()
 			return m, nil
 		}
-		m.save("Pacote criado: " + m.pkgName)
+		m.save(i18n.T("Package created: ") + m.pkgName)
 		m.toMenu()
 		return m, nil
 	case scPkgRemove:
 		id := m.pick.selectedID()
 		if m.cfg.RemovePackage(id) {
-			m.save("Pacote removido: " + id)
+			m.save(i18n.T("Package removed: ") + id)
 		}
 		m.toMenu()
 		return m, nil
@@ -573,13 +574,13 @@ func (m model) onEnter() (tea.Model, tea.Cmd) {
 		date := m.pick.selectedID()
 		if journal.HasLearning(date) {
 			m.reviewDate = date
-			label := "Dia " + date + " já tem análise salva. O que deseja?"
+			label := fmt.Sprintf(i18n.T("Day %s already has a saved analysis. What do you want?"), date)
 			if date == journal.Today() {
-				label = "Hoje (" + date + ") já tem uma análise. O que deseja?"
+				label = fmt.Sprintf(i18n.T("Today (%s) already has an analysis. What do you want?"), date)
 			}
 			m.pick = newPicker(label, []pickItem{
-				{id: "view", label: "Ver análise existente (cache)"},
-				{id: "rerun", label: "Reanalisar agora (rodar o Claude de novo)"},
+				{id: "view", label: i18n.T("View existing analysis (cache)")},
+				{id: "rerun", label: i18n.T("Re-analyze now (run Claude again)")},
 			}, false)
 			m.screen = scReviewChoice
 			return m, nil
@@ -609,7 +610,7 @@ func (m model) onEnter() (tea.Model, tea.Cmd) {
 			for _, opt := range def.Enum {
 				items = append(items, pickItem{id: opt, label: opt})
 			}
-			m.pick = newPicker("Definir "+key, items, false)
+			m.pick = newPicker(i18n.T("Set ")+key, items, false)
 			m.screen = scConfigChoice
 			return m, nil
 		}
@@ -649,11 +650,11 @@ func (m model) onEnter() (tea.Model, tea.Cmd) {
 	case scLayoutPick:
 		m.layoutID = m.pick.selectedID()
 		if len(m.cfg.Projects) == 0 {
-			m.status = "Nenhum projeto cadastrado."
+			m.status = i18n.T("No projects registered.")
 			m.toMenu()
 			return m, nil
 		}
-		m.pick = newPicker("Abrir com layout — escolha o projeto", m.projectItems(false), false)
+		m.pick = newPicker(i18n.T("Open with layout — choose project"), m.projectItems(false), false)
 		m.screen = scLayoutProj
 		gitCmd := m.gitLoadForPick()
 		return m, gitCmd
@@ -661,15 +662,15 @@ func (m model) onEnter() (tea.Model, tea.Cmd) {
 		project, okP := m.cfg.FindProject(m.pick.selectedID())
 		layout, okL := m.cfg.FindLayout(m.layoutID)
 		if !okP || !okL {
-			m.errMsg = "Projeto ou layout não encontrado."
+			m.errMsg = i18n.T("Project or layout not found.")
 			m.toMenu()
 			return m, nil
 		}
 		line, err := launcher.LaunchLayout(*project, *layout, m.cfg.Settings.TabColors, false)
 		if err != nil {
-			m.errMsg = "Falha ao abrir: " + err.Error()
+			m.errMsg = i18n.T("Failed to open: ") + err.Error()
 		} else {
-			m.status = fmt.Sprintf("Aberto %s com layout %s.", project.Name, layout.ID)
+			m.status = fmt.Sprintf(i18n.T("Opened %s with layout %s."), project.Name, layout.ID)
 			_ = line
 		}
 		m.toMenu()
@@ -689,7 +690,7 @@ func (m *model) applyConfig(key, value string) {
 		return
 	}
 	if err := m.cfg.Save(); err != nil {
-		m.errMsg = "Erro ao salvar: " + err.Error()
+		m.errMsg = i18n.T("Error saving: ") + err.Error()
 		return
 	}
 	m.status = key + " = " + dashTUI(def.Get(m.cfg))
@@ -697,7 +698,7 @@ func (m *model) applyConfig(key, value string) {
 
 func dashTUI(s string) string {
 	if s == "" {
-		return "(vazio)"
+		return i18n.T("(empty)")
 	}
 	return s
 }
@@ -712,7 +713,7 @@ func (m *model) markOffered() {
 func (m *model) beginAnalyze(date string) tea.Cmd {
 	m.markOffered()
 	m.reviewDate = date
-	m.execTitle = "Analisando aprendizados de " + date
+	m.execTitle = i18n.T("Analyzing learnings from ") + date
 	m.screen = scAnalyzing
 	return tea.Batch(m.spinner.Tick, analyzeCmd(m.cfg, date))
 }
@@ -721,10 +722,10 @@ func (m *model) beginAnalyze(date string) tea.Cmd {
 func (m *model) showExistingLearning(date string) {
 	md, err := journal.ReadLearning(date)
 	if err != nil {
-		m.execTitle = "Análise de " + date
-		m.execOutput = errStyle.Render("Não foi possível ler a análise existente: " + err.Error())
+		m.execTitle = i18n.T("Analysis of ") + date
+		m.execOutput = errStyle.Render(i18n.T("Could not read existing analysis: ") + err.Error())
 	} else {
-		m.execTitle = "Aprendizados de " + date + " (cache)"
+		m.execTitle = i18n.T("Learnings from ") + date + i18n.T(" (cache)")
 		m.execOutput = md
 	}
 	m.screen = scExecResult
@@ -734,30 +735,30 @@ func (m model) dispatchMenu() (tea.Model, tea.Cmd) {
 	switch m.menu.selectedID() {
 	case "open":
 		if len(m.cfg.Projects) == 0 {
-			m.status = "Nenhum projeto cadastrado. Use 'Adicionar projeto' ou 'Escanear'."
+			m.status = i18n.T("No projects registered. Use 'Add project' or 'Scan'.")
 			return m, nil
 		}
-		m.pick = newPicker("Abrir projetos (espaço marca, enter confirma)", m.projectItems(true), true)
+		m.pick = newPicker(i18n.T("Open projects (space to select, enter to confirm)"), m.projectItems(true), true)
 		m.screen = scOpenPick
 		gitCmd := m.gitLoadForPick()
 		return m, gitCmd
 	case "openpkg":
 		if len(m.cfg.Packages) == 0 {
-			m.status = "Nenhum pacote cadastrado. Use 'Criar pacote'."
+			m.status = i18n.T("No packages registered. Use 'Create package'.")
 			return m, nil
 		}
-		m.pick = newPicker("Abrir pacote", m.packageItems(), false)
+		m.pick = newPicker(i18n.T("Open package"), m.packageItems(), false)
 		m.screen = scPkgOpenPick
 	case "addproj":
 		m.newProjName = ""
-		m.input = newInput("Nome do projeto (enter usa o nome da pasta)")
+		m.input = newInput(i18n.T("Project name (enter uses folder name)"))
 		m.screen = scProjAddName
 	case "rmproj":
 		if len(m.cfg.Projects) == 0 {
-			m.status = "Nenhum projeto para remover."
+			m.status = i18n.T("No projects to remove.")
 			return m, nil
 		}
-		m.pick = newPicker("Remover projeto", m.projectItems(false), false)
+		m.pick = newPicker(i18n.T("Remove project"), m.projectItems(false), false)
 		m.screen = scProjRemove
 		gitCmd := m.gitLoadForPick()
 		return m, gitCmd
@@ -765,41 +766,41 @@ func (m model) dispatchMenu() (tea.Model, tea.Cmd) {
 		return m.startScan()
 	case "addpkg":
 		if len(m.cfg.Projects) == 0 {
-			m.status = "Cadastre projetos antes de criar um pacote."
+			m.status = i18n.T("Register projects before creating a package.")
 			return m, nil
 		}
 		m.pkgName = ""
-		m.input = newInput("Nome do pacote")
+		m.input = newInput(i18n.T("Package name"))
 		m.screen = scPkgAddName
 	case "rmpkg":
 		if len(m.cfg.Packages) == 0 {
-			m.status = "Nenhum pacote para remover."
+			m.status = i18n.T("No packages to remove.")
 			return m, nil
 		}
-		m.pick = newPicker("Remover pacote", m.packageItems(), false)
+		m.pick = newPicker(i18n.T("Remove package"), m.packageItems(), false)
 		m.screen = scPkgRemove
 	case "exec":
-		m.input = newInput("Comando a executar (ex: git status)")
+		m.input = newInput(i18n.T("Command to execute (e.g. git status)"))
 		m.screen = scExecInput
 	case "review":
 		days, _ := journal.Days()
 		if len(days) == 0 {
-			m.status = "Sem logs ainda. Use 'Executar comando' para começar a registrar."
+			m.status = i18n.T("No logs yet. Use 'Execute command' to start recording.")
 			return m, nil
 		}
 		var items []pickItem
 		for i := len(days) - 1; i >= 0; i-- { // mais recentes primeiro
 			d := days[i]
-			desc := "sem análise"
+			desc := i18n.T("no analysis")
 			switch {
 			case d == journal.Today():
-				desc = "hoje — pode reanalisar"
+				desc = i18n.T("today — can re-analyze")
 			case journal.HasLearning(d):
-				desc = "já analisado (cache disponível)"
+				desc = i18n.T("already analyzed (cache available)")
 			}
 			items = append(items, pickItem{id: d, label: d, desc: desc})
 		}
-		m.pick = newPicker("Analisar aprendizados — escolha o dia", items, false)
+		m.pick = newPicker(i18n.T("Analyze learnings — choose day"), items, false)
 		m.screen = scReviewPick
 	case "config":
 		m.openConfigList()
@@ -809,7 +810,7 @@ func (m model) dispatchMenu() (tea.Model, tea.Cmd) {
 		m.openAliases()
 	case "openlayout":
 		if len(m.cfg.Layouts) == 0 {
-			m.status = "Nenhum layout. Crie com 'bvr layout add <nome> --preset dev'."
+			m.status = i18n.T("No layouts. Create one with 'bvr layout add <name> --preset dev'.")
 			return m, nil
 		}
 		var items []pickItem
@@ -820,10 +821,10 @@ func (m model) dispatchMenu() (tea.Model, tea.Cmd) {
 			}
 			items = append(items, pickItem{
 				id: l.ID, label: l.Name,
-				desc: fmt.Sprintf("%d aba(s), %d painel(éis)", len(l.Tabs), panes),
+				desc: fmt.Sprintf(i18n.T("%d tab(s), %d pane(s)"), len(l.Tabs), panes),
 			})
 		}
-		m.pick = newPicker("Abrir com layout — escolha o layout", items, false)
+		m.pick = newPicker(i18n.T("Open with layout — choose layout"), items, false)
 		m.screen = scLayoutPick
 	case "quit":
 		m.quitting = true
@@ -854,17 +855,17 @@ func (m *model) openHistory() {
 		})
 	}
 	if len(items) == 0 {
-		m.status = "Sem histórico nos últimos 7 dias."
+		m.status = i18n.T("No history in the last 7 days.")
 		return
 	}
-	m.pick = newPicker("Histórico — enter re-executa · / filtra", items, false)
+	m.pick = newPicker(i18n.T("History — enter re-runs · / filter"), items, false)
 	m.screen = scHistory
 }
 
 // openAliases monta o picker dos atalhos cadastrados.
 func (m *model) openAliases() {
 	if len(m.cfg.Aliases) == 0 {
-		m.status = "Nenhum atalho. Crie com 'bvr alias set <nome> <comando>'."
+		m.status = i18n.T("No aliases. Create one with 'bvr alias set <name> <command>'.")
 		return
 	}
 	names := make([]string, 0, len(m.cfg.Aliases))
@@ -876,7 +877,7 @@ func (m *model) openAliases() {
 	for _, n := range names {
 		items = append(items, pickItem{id: n, label: n, desc: m.cfg.Aliases[n]})
 	}
-	m.pick = newPicker("Atalhos — enter executa · / filtra", items, false)
+	m.pick = newPicker(i18n.T("Aliases — enter runs · / filter"), items, false)
 	m.screen = scAliases
 }
 
@@ -886,11 +887,11 @@ func (m *model) openConfigList() {
 	for _, d := range config.SettingDefs {
 		val := d.Get(m.cfg)
 		if val == "" {
-			val = "(vazio)"
+			val = i18n.T("(empty)")
 		}
 		items = append(items, pickItem{id: d.Key, label: d.Key, desc: val})
 	}
-	m.pick = newPicker("Configurações — escolha uma chave", items, false)
+	m.pick = newPicker(i18n.T("Settings — choose a key"), items, false)
 	m.screen = scConfigList
 }
 
@@ -903,7 +904,7 @@ func (m model) startScan() (tea.Model, tea.Cmd) {
 	}
 	candidates, err := scanner.Scan(root, scanner.DefaultDepth)
 	if err != nil {
-		m.status = "Erro ao escanear: " + err.Error()
+		m.status = i18n.T("Error scanning: ") + err.Error()
 		return m, nil
 	}
 	// Também oferece os diretórios-pai que agrupam ≥2 projetos.
@@ -920,10 +921,10 @@ func (m model) startScan() (tea.Model, tea.Cmd) {
 		})
 	}
 	if len(items) == 0 {
-		m.status = fmt.Sprintf("Nada novo para importar em %s", root)
+		m.status = fmt.Sprintf(i18n.T("Nothing new to import in %s"), root)
 		return m, nil
 	}
-	m.pick = newPicker(fmt.Sprintf("Escanear & importar — %s", root), items, true)
+	m.pick = newPicker(fmt.Sprintf(i18n.T("Scan & import — %s"), root), items, true)
 	m.screen = scScan
 	return m, nil
 }
@@ -948,12 +949,12 @@ func (m model) updateInput(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		switch m.screen {
 		case scProjAddName:
 			m.newProjName = value
-			m.input = newInput("Caminho do diretório (ex: F:\\proj\\meu-app)")
+			m.input = newInput(i18n.T("Directory path (e.g. F:\\proj\\my-app)"))
 			m.screen = scProjAddPath
 			return m, textinput.Blink
 		case scProjAddPath:
 			if value == "" {
-				m.errMsg = "Informe um caminho."
+				m.errMsg = i18n.T("Please enter a path.")
 				return m, nil
 			}
 			p, err := m.cfg.AddProject(m.newProjName, value, "")
@@ -961,22 +962,22 @@ func (m model) updateInput(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 				m.errMsg = err.Error()
 				return m, nil
 			}
-			m.save("Projeto adicionado: " + p.ID)
+			m.save(i18n.T("Project added: ") + p.ID)
 			m.toMenu()
 			return m, nil
 		case scPkgAddName:
 			if value == "" {
-				m.errMsg = "Informe um nome."
+				m.errMsg = i18n.T("Please enter a name.")
 				return m, nil
 			}
 			m.pkgName = value
-			m.pick = newPicker("Projetos do pacote (espaço marca)", m.projectItems(true), true)
+			m.pick = newPicker(i18n.T("Package projects (space to select)"), m.projectItems(true), true)
 			m.screen = scPkgAddPick
 			gitCmd := m.gitLoadForPick()
 			return m, gitCmd
 		case scExecInput:
 			if value == "" {
-				m.errMsg = "Informe um comando."
+				m.errMsg = i18n.T("Please enter a command.")
 				return m, nil
 			}
 			res, _ := runner.Run(m.cfg.Settings.DefaultRunShell, value, "", false)
@@ -999,16 +1000,16 @@ func (m model) updateInput(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 func (m *model) launch(mode config.Mode, items []launcher.Item) {
 	lines, err := launcher.Launch(mode, items, m.cfg.Settings.TabColors, false)
 	if err != nil {
-		m.errMsg = "Falha ao abrir: " + err.Error()
+		m.errMsg = i18n.T("Failed to open: ") + err.Error()
 		return
 	}
-	m.status = fmt.Sprintf("Aberto %d projeto(s) em modo %s. (%d comando wt)", len(items), mode, len(lines))
+	m.status = fmt.Sprintf(i18n.T("Opened %d project(s) in %s mode. (%d wt command)"), len(items), mode, len(lines))
 }
 
 // save persiste a config e define status (ou errMsg em caso de falha).
 func (m *model) save(okMsg string) {
 	if err := m.cfg.Save(); err != nil {
-		m.errMsg = "Erro ao salvar: " + err.Error()
+		m.errMsg = i18n.T("Error saving: ") + err.Error()
 		return
 	}
 	m.status = okMsg
@@ -1024,7 +1025,7 @@ func formatExecOutput(res runner.Result) string {
 		b.WriteString(errStyle.Render(errOut) + "\n")
 	}
 	if b.Len() == 0 {
-		return descStyle.Render("(sem saída)")
+		return descStyle.Render(i18n.T("(no output)"))
 	}
 	return lastLines(b.String(), 30)
 }
@@ -1036,14 +1037,14 @@ func lastLines(s string, n int) string {
 		return strings.Join(lines, "\n")
 	}
 	trimmed := lines[len(lines)-n:]
-	return descStyle.Render(fmt.Sprintf("…(%d linhas anteriores omitidas)", len(lines)-n)) +
+	return descStyle.Render(fmt.Sprintf(i18n.T("…(%d previous lines omitted)"), len(lines)-n)) +
 		"\n" + strings.Join(trimmed, "\n")
 }
 
 // openConfirmView mostra os projetos selecionados antes de confirmar a abertura.
 func (m model) openConfirmView() string {
 	var b strings.Builder
-	b.WriteString(titleStyle.Render("Confirmar projetos a abrir") + "\n\n")
+	b.WriteString(titleStyle.Render(i18n.T("Confirm projects to open")) + "\n\n")
 
 	itemsFit := (m.viewH - 9) / 2
 	if m.viewH <= 0 {
@@ -1062,9 +1063,9 @@ func (m model) openConfirmView() string {
 		b.WriteString("      " + descStyle.Render(p.Path) + "\n")
 	}
 	if len(m.openProjects) > shown {
-		b.WriteString(descStyle.Render(fmt.Sprintf("  … e mais %d", len(m.openProjects)-shown)) + "\n")
+		b.WriteString(descStyle.Render(fmt.Sprintf(i18n.T("  … and %d more"), len(m.openProjects)-shown)) + "\n")
 	}
-	b.WriteString("\n" + descStyle.Render(fmt.Sprintf("%d projeto(s) selecionado(s)", len(m.openProjects))) + "\n")
+	b.WriteString("\n" + descStyle.Render(fmt.Sprintf(i18n.T("%d project(s) selected"), len(m.openProjects))) + "\n")
 	return b.String()
 }
 
@@ -1086,7 +1087,7 @@ func (m model) View() string {
 		b.WriteString(m.openConfirmView())
 	} else if m.screen == scAnalyzing {
 		b.WriteString(titleStyle.Render(m.execTitle) + "\n\n")
-		b.WriteString(m.spinner.View() + " chamando o Claude, aguarde…\n")
+		b.WriteString(m.spinner.View() + i18n.T(" calling Claude, please wait…\n"))
 	} else {
 		b.WriteString(m.pick.view(m.pageSizeFor(&m.pick)))
 	}
@@ -1106,40 +1107,40 @@ func (m model) View() string {
 func (m model) inputTitle() string {
 	switch m.screen {
 	case scProjAddName:
-		return "Adicionar projeto — nome"
+		return i18n.T("Add project — name")
 	case scProjAddPath:
-		return "Adicionar projeto — caminho"
+		return i18n.T("Add project — path")
 	case scPkgAddName:
-		return "Criar pacote — nome"
+		return i18n.T("Create package — name")
 	case scExecInput:
-		return "Executar comando"
+		return i18n.T("Execute command")
 	case scConfigEdit:
-		return "Definir " + m.configKey
+		return i18n.T("Set ") + m.configKey
 	}
 	return ""
 }
 
 func (m model) helpLine() string {
 	if m.isInputScreen() {
-		return "enter: confirmar · esc: cancelar · ctrl+c: sair"
+		return i18n.T("enter: confirm · esc: cancel · ctrl+c: quit")
 	}
 	if m.screen == scAnalyzing {
-		return "analisando… (ctrl+c sai)"
+		return i18n.T("analyzing… (ctrl+c quits)")
 	}
 	if m.screen == scExecResult {
-		return "enter/esc: voltar ao menu"
+		return i18n.T("enter/esc: back to menu")
 	}
 	if m.screen == scOpenConfirm {
-		return "enter: abrir · esc: voltar à seleção"
+		return i18n.T("enter: open · esc: back to selection")
 	}
 	if m.isListScreen() && m.activePicker().filtering {
-		return "filtrando: digite · ↑/↓ navega · enter aplica · esc limpa"
+		return i18n.T("filtering: type · ↑/↓ navigate · enter apply · esc clear")
 	}
 	if m.screen == scMenu {
-		return "↑/↓ navegar · / filtrar · enter selecionar · q sair"
+		return i18n.T("↑/↓ navigate · / filter · enter select · q quit")
 	}
 	if m.pick.multi {
-		return "↑/↓ nav · ←/→ págs · / filtrar · espaço marcar · enter ok · esc voltar"
+		return i18n.T("↑/↓ nav · ←/→ pages · / filter · space select · enter ok · esc back")
 	}
-	return "↑/↓ nav · ←/→ págs · / filtrar · enter selecionar · esc voltar"
+	return i18n.T("↑/↓ nav · ←/→ pages · / filter · enter select · esc back")
 }

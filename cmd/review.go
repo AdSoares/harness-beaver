@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"harnessbeaver/internal/config"
+	"harnessbeaver/internal/i18n"
 	"harnessbeaver/internal/insights"
 	"harnessbeaver/internal/journal"
 )
@@ -17,14 +18,10 @@ var (
 )
 
 var reviewCmd = &cobra.Command{
-	Use:   "review [data]",
-	Short: "Analisa os aprendizados de um dia (IA)",
-	Long: `Analisa os comandos registrados em um dia e gera um markdown de
-aprendizados em ~/.harnessbeaver/learnings/<data>.md.
-
-Sem argumento, usa o dia pendente (anterior, sem análise) ou hoje.
-Data no formato AAAA-MM-DD. Use --dry-run para ver o prompt sem chamar a IA.`,
-	Args: cobra.MaximumNArgs(1),
+	Use:   i18n.T("review [date]"),
+	Short: i18n.T("Analyse a day's learnings (AI)"),
+	Long:  i18n.T("Analyse the commands recorded on a given day and generate a markdown\nlearnings file at ~/.harnessbeaver/learnings/<date>.md.\n\nWith no argument, uses the pending day (previous, not yet analysed) or today.\nDate in YYYY-MM-DD format. Use --dry-run to see the prompt without calling the AI."),
+	Args:  cobra.MaximumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg, err := config.Load()
 		if err != nil {
@@ -34,7 +31,7 @@ Data no formato AAAA-MM-DD. Use --dry-run para ver o prompt sem chamar a IA.`,
 		date := ""
 		if len(args) == 1 {
 			if _, err := time.Parse(journal.DateLayout, args[0]); err != nil {
-				return fmt.Errorf("data inválida %q (use AAAA-MM-DD)", args[0])
+				return fmt.Errorf(i18n.T("invalid date %q (use YYYY-MM-DD)"), args[0])
 			}
 			date = args[0]
 		} else if d, _ := journal.PendingReviewDate(); d != "" {
@@ -58,7 +55,7 @@ Data no formato AAAA-MM-DD. Use --dry-run para ver o prompt sem chamar a IA.`,
 			if err != nil {
 				return err
 			}
-			fmt.Printf("Análise existente de %s (use --force para refazer):\n\n%s\n", date, md)
+			fmt.Printf(i18n.T("Existing analysis for %s (use --force to redo):\n\n%s\n"), date, md)
 			return nil
 		}
 
@@ -67,7 +64,7 @@ Data no formato AAAA-MM-DD. Use --dry-run para ver o prompt sem chamar a IA.`,
 			return err
 		}
 		markOffered(cfg)
-		fmt.Printf("Análise salva em: %s\n\n%s\n", path, md)
+		fmt.Printf(i18n.T("Analysis saved to: %s\n\n%s\n"), path, md)
 		return nil
 	},
 }
@@ -79,7 +76,7 @@ func markOffered(cfg *config.Config) {
 }
 
 func init() {
-	reviewCmd.Flags().BoolVar(&reviewDryRun, "dry-run", false, "imprime o prompt sem chamar a IA")
-	reviewCmd.Flags().BoolVar(&reviewForce, "force", false, "refaz a análise mesmo se já houver cache")
+	reviewCmd.Flags().BoolVar(&reviewDryRun, "dry-run", false, i18n.T("print the prompt without calling the AI"))
+	reviewCmd.Flags().BoolVar(&reviewForce, "force", false, i18n.T("redo analysis even if a cached result exists"))
 	rootCmd.AddCommand(reviewCmd)
 }

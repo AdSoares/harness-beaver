@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+
+	"harnessbeaver/internal/i18n"
 )
 
 // SettingDef descreve uma chave editável de Settings, com leitura/escrita por
@@ -28,7 +30,7 @@ func (d SettingDef) Apply(c *Config, v string) error {
 			}
 		}
 		if !ok {
-			return fmt.Errorf("valor inválido %q (use: %s)", v, strings.Join(d.Enum, ", "))
+			return fmt.Errorf(i18n.T("invalid value %q (use: %s)"), v, strings.Join(d.Enum, ", "))
 		}
 	}
 	d.Set(c, v)
@@ -47,62 +49,69 @@ func shellStrings(ss []Shell) []string {
 var SettingDefs = []SettingDef{
 	{
 		Key:  "scanRoot",
-		Help: "diretório raiz do scan de projetos",
+		Help: i18n.T("root directory for project scanning"),
 		Get:  func(c *Config) string { return c.Settings.ScanRoot },
 		Set:  func(c *Config, v string) { c.Settings.ScanRoot = v },
 	},
 	{
 		Key:  "defaultMode",
-		Help: "modo padrão de abertura",
+		Help: i18n.T("default open mode"),
 		Enum: []string{string(ModeTabs), string(ModeWindows)},
 		Get:  func(c *Config) string { return string(c.Settings.DefaultMode) },
 		Set:  func(c *Config, v string) { c.Settings.DefaultMode = Mode(v) },
 	},
 	{
 		Key:  "defaultShell",
-		Help: "shell padrão do launcher",
+		Help: i18n.T("default launcher shell"),
 		Enum: shellStrings(ValidShells),
 		Get:  func(c *Config) string { return string(c.Settings.DefaultShell) },
 		Set:  func(c *Config, v string) { c.Settings.DefaultShell = Shell(v) },
 	},
 	{
 		Key:  "defaultRunShell",
-		Help: "shell padrão do run/shell",
+		Help: i18n.T("default run/shell shell"),
 		Enum: shellStrings(ValidRunShells),
 		Get:  func(c *Config) string { return string(c.Settings.DefaultRunShell) },
 		Set:  func(c *Config, v string) { c.Settings.DefaultRunShell = Shell(v) },
 	},
 	{
 		Key:  "insightsEngine",
-		Help: "motor da análise de aprendizados",
+		Help: i18n.T("engine for learnings analysis"),
 		Enum: []string{"auto", "claude", "api"},
 		Get:  func(c *Config) string { return c.Settings.InsightsEngine },
 		Set:  func(c *Config, v string) { c.Settings.InsightsEngine = v },
 	},
 	{
 		Key:  "insightsModel",
-		Help: "modelo usado no caminho da API",
+		Help: i18n.T("model used on the API path"),
 		Get:  func(c *Config) string { return c.Settings.InsightsModel },
 		Set:  func(c *Config, v string) { c.Settings.InsightsModel = v },
 	},
 	{
 		Key:  "learningsExtraDir",
-		Help: "pasta extra p/ copiar as análises (vazio = desligado)",
+		Help: i18n.T("extra directory to copy analyses to (empty = disabled)"),
 		Get:  func(c *Config) string { return c.Settings.LearningsExtraDir },
 		Set:  func(c *Config, v string) { c.Settings.LearningsExtraDir = v },
 	},
 	{
 		Key:  "upgradeSource",
-		Help: "URL ou caminho do binário p/ 'bvr upgrade'",
+		Help: i18n.T("URL or path to binary for 'bvr upgrade'"),
 		Get:  func(c *Config) string { return c.Settings.UpgradeSource },
 		Set:  func(c *Config, v string) { c.Settings.UpgradeSource = v },
 	},
 	{
 		Key:  "tabColors",
-		Help: "cor diferente por aba/janela aberta",
+		Help: i18n.T("different color per open tab/window"),
 		Enum: []string{"true", "false"},
 		Get:  func(c *Config) string { return strconv.FormatBool(c.Settings.TabColors) },
 		Set:  func(c *Config, v string) { c.Settings.TabColors = v == "true" },
+	},
+	{
+		Key:  "language",
+		Help: i18n.T("interface language (en|pt)"),
+		Enum: []string{"en", "pt"},
+		Get:  func(c *Config) string { return c.Settings.Language },
+		Set:  func(c *Config, v string) { c.Settings.Language = v },
 	},
 }
 

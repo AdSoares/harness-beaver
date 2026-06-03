@@ -163,7 +163,27 @@ bvr config set learningsExtraDir ""          # turn off the extra copy
 Keys: `scanRoot`, `defaultMode` (tabs|windows), `defaultShell` (claude|pwsh|cmd),
 `defaultRunShell` (pwsh|cmd|bash|zsh; OS-aware default), `insightsEngine` (auto|claude|api),
 `insightsModel`, `learningsExtraDir`, `upgradeSource`, `tabColors` (true|false — a different
-color per opened tab/window).
+color per opened tab/window), `language` (en|pt).
+
+## Language
+
+`bvr` runs in **English by default** and also speaks **Brazilian Portuguese**.
+The active language is resolved in this order:
+
+1. the `--lang en|pt` flag (per invocation),
+2. the `BVR_LANG` environment variable (`en`/`pt`, also accepts `pt-BR`, `english`…),
+3. the `language` setting in `config.json`,
+4. default: `en`.
+
+```powershell
+bvr config set language pt     # persist Portuguese for all output, help and the TUI
+bvr --lang pt status           # one-off override for a single command
+$env:BVR_LANG = "pt"; bvr      # via environment variable
+```
+
+Note: `--lang` localizes command output, error messages and the TUI; the static
+`--help` text follows the persistent choice (`BVR_LANG` or the `language` setting),
+since it is built at startup. Set `language` (or `BVR_LANG`) to translate help too.
 
 ## Maintenance
 

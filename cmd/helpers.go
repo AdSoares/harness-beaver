@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"harnessbeaver/internal/config"
+	"harnessbeaver/internal/i18n"
 	"harnessbeaver/internal/launcher"
 )
 
@@ -17,7 +18,7 @@ func validateShell(s string) (config.Shell, error) {
 			return v, nil
 		}
 	}
-	return "", fmt.Errorf("shell inválido %q (use: claude, pwsh, cmd)", s)
+	return "", fmt.Errorf(i18n.T("invalid shell %q (use: claude, pwsh, cmd)"), s)
 }
 
 // validateMode garante que a string corresponde a um modo suportado.
@@ -30,7 +31,7 @@ func validateMode(s string) (config.Mode, error) {
 			return v, nil
 		}
 	}
-	return "", fmt.Errorf("modo inválido %q (use: tabs, windows)", s)
+	return "", fmt.Errorf(i18n.T("invalid mode %q (use: tabs, windows)"), s)
 }
 
 // resolveOpen interpreta os argumentos (ids de pacote e/ou projeto) e as flags
@@ -60,10 +61,10 @@ func resolveOpen(cfg *config.Config, args []string, modeFlag, shellFlag string) 
 			projects = append(projects, *pr)
 			continue
 		}
-		return "", nil, fmt.Errorf("id não encontrado (projeto ou pacote): %s", a)
+		return "", nil, fmt.Errorf(i18n.T("id not found (project or package): %s"), a)
 	}
 	if len(projects) == 0 {
-		return "", nil, fmt.Errorf("nenhum projeto para abrir")
+		return "", nil, i18n.Errorf("no projects to open")
 	}
 
 	// Modo: default global < pacote < flag.

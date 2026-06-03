@@ -12,17 +12,16 @@ import (
 	"github.com/spf13/cobra"
 
 	"harnessbeaver/internal/config"
+	"harnessbeaver/internal/i18n"
 )
 
 var upgradeSourceFlag string
 
 var upgradeCmd = &cobra.Command{
 	Use:   "upgrade",
-	Short: "Atualiza o binário do bvr a partir de uma fonte (URL ou caminho)",
-	Long: `Baixa o binário novo de --source (ou settings.upgradeSource) e substitui o
-executável atual. A fonte pode ser uma URL http(s) ou um caminho de arquivo
-local/compartilhado. O binário anterior é mantido como backup (.old).`,
-	Args: cobra.NoArgs,
+	Short: i18n.T("Update the bvr binary from a source (URL or path)"),
+	Long:  i18n.T("Download the new binary from --source (or settings.upgradeSource) and replace\nthe current executable. The source can be an http(s) URL or a local/shared file\npath. The previous binary is kept as a backup (.old)."),
+	Args:  cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg, err := config.Load()
 		if err != nil {
@@ -33,7 +32,7 @@ local/compartilhado. O binário anterior é mantido como backup (.old).`,
 			source = cfg.Settings.UpgradeSource
 		}
 		if source == "" {
-			return fmt.Errorf("nenhuma fonte: use --source <url|caminho> ou 'bvr config set upgradeSource <...>'")
+			return i18n.Errorf("no source: use --source <url|path> or 'bvr config set upgradeSource <...>'")
 		}
 
 		exe, err := os.Executable()
@@ -46,7 +45,7 @@ local/compartilhado. O binário anterior é mantido como backup (.old).`,
 
 		newPath := exe + ".new"
 		if err := fetchBinary(source, newPath); err != nil {
-			return fmt.Errorf("falha ao obter binário: %w", err)
+			return fmt.Errorf(i18n.T("failed to fetch binary: %w"), err)
 		}
 		_ = os.Chmod(newPath, 0o755)
 
@@ -55,14 +54,14 @@ local/compartilhado. O binário anterior é mantido como backup (.old).`,
 		_ = os.Remove(oldPath)
 		if err := os.Rename(exe, oldPath); err != nil {
 			_ = os.Remove(newPath)
-			return fmt.Errorf("não foi possível mover o binário atual: %w", err)
+			return fmt.Errorf(i18n.T("could not move the current binary: %w"), err)
 		}
 		if err := os.Rename(newPath, exe); err != nil {
 			_ = os.Rename(oldPath, exe) // tenta restaurar
 			_ = os.Remove(newPath)
-			return fmt.Errorf("não foi possível instalar o novo binário: %w", err)
+			return fmt.Errorf(i18n.T("could not install the new binary: %w"), err)
 		}
-		fmt.Printf("Atualizado: %s\n(backup do anterior em %s — pode apagar)\n", exe, oldPath)
+		fmt.Printf(i18n.T("Updated: %s\n(backup of the previous binary at %s — safe to delete)\n"), exe, oldPath)
 		return nil
 	},
 }
@@ -77,7 +76,7 @@ func fetchBinary(source, dest string) error {
 		}
 		defer resp.Body.Close()
 		if resp.StatusCode >= 300 {
-			return fmt.Errorf("status %d", resp.StatusCode)
+			return fmt.Errorf(i18n.T("status %d"), resp.StatusCode)
 		}
 		return copyToFile(dest, resp.Body)
 	}
@@ -100,6 +99,6 @@ func copyToFile(dest string, r io.Reader) error {
 }
 
 func init() {
-	upgradeCmd.Flags().StringVar(&upgradeSourceFlag, "source", "", "URL ou caminho do binário novo")
+	upgradeCmd.Flags().StringVar(&upgradeSourceFlag, "source", "", i18n.T("URL or path of the new binary"))
 	rootCmd.AddCommand(upgradeCmd)
 }

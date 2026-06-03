@@ -15,9 +15,9 @@ func makeItems(n int) []pickItem {
 
 func TestWindowBounds(t *testing.T) {
 	cases := []struct {
-		name                         string
-		cursor, total, page          int
-		wantStart, wantEnd           int
+		name                string
+		cursor, total, page int
+		wantStart, wantEnd  int
 	}{
 		{"cabe tudo", 0, 5, 10, 0, 5},
 		{"topo", 0, 28, 10, 0, 10},
@@ -42,13 +42,13 @@ func TestViewShowsFirstItemAtTop(t *testing.T) {
 	if !strings.Contains(out, "proj-0") {
 		t.Fatalf("primeiro item não apareceu com cursor no topo:\n%s", out)
 	}
-	if !strings.Contains(out, "▼ 18 abaixo") {
+	if !strings.Contains(out, "▼ 18 below") {
 		t.Errorf("faltou indicador de itens abaixo:\n%s", out)
 	}
 	if strings.Contains(out, "▲") {
 		t.Errorf("não deveria haver indicador 'acima' no topo:\n%s", out)
 	}
-	if !strings.Contains(out, "1–10 de 28") {
+	if !strings.Contains(out, "1–10 of 28") {
 		t.Errorf("faltou rodapé de posição:\n%s", out)
 	}
 }
@@ -57,7 +57,7 @@ func TestViewAtBottomShowsAboveIndicator(t *testing.T) {
 	p := newPicker("teste", makeItems(28), false)
 	p.cursor = 27
 	out := p.view(10)
-	if !strings.Contains(out, "▲ 18 acima") {
+	if !strings.Contains(out, "▲ 18 above") {
 		t.Errorf("faltou indicador 'acima' no fim:\n%s", out)
 	}
 	if strings.Contains(out, "▼") {

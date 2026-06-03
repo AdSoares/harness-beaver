@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"harnessbeaver/internal/config"
+	"harnessbeaver/internal/i18n"
 	"harnessbeaver/internal/launcher"
 )
 
@@ -18,8 +19,8 @@ var (
 )
 
 var openCmd = &cobra.Command{
-	Use:   "open <pkgId|projId> [outros...]",
-	Short: "Abre projetos ou um pacote no Windows Terminal",
+	Use:   i18n.T("open <pkgId|projId> [others...]"),
+	Short: i18n.T("Open projects or a package in Windows Terminal"),
 	Args:  cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg, err := config.Load()
@@ -39,7 +40,7 @@ var openCmd = &cobra.Command{
 			if openDryRun {
 				fmt.Println(line)
 			} else {
-				fmt.Printf("Aberto %s com o layout %s.\n", project.Name, layout.ID)
+				fmt.Printf(i18n.T("Opened %s with layout %s.\n"), project.Name, layout.ID)
 			}
 			return nil
 		}
@@ -58,7 +59,7 @@ var openCmd = &cobra.Command{
 			}
 			return nil
 		}
-		fmt.Printf("Aberto %d projeto(s) em modo %s.\n", len(items), mode)
+		fmt.Printf(i18n.T("Opened %d project(s) in mode %s.\n"), len(items), mode)
 		return nil
 	},
 }
@@ -73,14 +74,14 @@ func resolveLayoutOpen(cfg *config.Config, args []string) (*config.Layout, *conf
 	// Resolve um único projeto a partir dos args (não expande pacotes aqui).
 	if len(args) != 1 {
 		if openLayout != "" {
-			return nil, nil, false, fmt.Errorf("--layout requer exatamente um projeto")
+			return nil, nil, false, i18n.Errorf("--layout requires exactly one project")
 		}
 		return nil, nil, false, nil
 	}
 	project, ok := cfg.FindProject(args[0])
 	if !ok {
 		if openLayout != "" {
-			return nil, nil, false, fmt.Errorf("--layout requer um projeto (não um pacote): %s", args[0])
+			return nil, nil, false, fmt.Errorf(i18n.T("--layout requires a project (not a package): %s"), args[0])
 		}
 		return nil, nil, false, nil
 	}
@@ -94,16 +95,16 @@ func resolveLayoutOpen(cfg *config.Config, args []string) (*config.Layout, *conf
 	}
 	layout, ok := cfg.FindLayout(layoutID)
 	if !ok {
-		return nil, nil, false, fmt.Errorf("layout não encontrado: %s", layoutID)
+		return nil, nil, false, fmt.Errorf(i18n.T("layout not found: %s"), layoutID)
 	}
 	return layout, project, true, nil
 }
 
 func init() {
-	openCmd.Flags().StringVar(&openMode, "mode", "", "modo de abertura: tabs|windows")
-	openCmd.Flags().StringVar(&openShell, "shell", "", "shell por aba: claude|pwsh|cmd")
-	openCmd.Flags().BoolVar(&openDryRun, "dry-run", false, "imprime os comandos wt sem executar")
-	openCmd.Flags().StringVar(&openLayout, "layout", "", "abre o projeto com este layout")
-	openCmd.Flags().BoolVar(&openNoLayout, "no-layout", false, "ignora o layout padrão do projeto")
+	openCmd.Flags().StringVar(&openMode, "mode", "", i18n.T("open mode: tabs|windows"))
+	openCmd.Flags().StringVar(&openShell, "shell", "", i18n.T("shell per tab: claude|pwsh|cmd"))
+	openCmd.Flags().BoolVar(&openDryRun, "dry-run", false, i18n.T("print wt commands without executing"))
+	openCmd.Flags().StringVar(&openLayout, "layout", "", i18n.T("open the project with this layout"))
+	openCmd.Flags().BoolVar(&openNoLayout, "no-layout", false, i18n.T("ignore the project's default layout"))
 	rootCmd.AddCommand(openCmd)
 }

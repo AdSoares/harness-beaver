@@ -8,11 +8,12 @@ import (
 	"github.com/spf13/cobra"
 
 	"harnessbeaver/internal/config"
+	"harnessbeaver/internal/i18n"
 )
 
 var aliasCmd = &cobra.Command{
 	Use:   "alias",
-	Short: "Gerencia atalhos de comandos (use 'bvr do <nome>' para executar)",
+	Short: i18n.T("Manage command shortcuts (use 'bvr do <name>' to run)"),
 	Args:  cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg, err := config.Load()
@@ -20,7 +21,7 @@ var aliasCmd = &cobra.Command{
 			return err
 		}
 		if len(cfg.Aliases) == 0 {
-			fmt.Println("Nenhum atalho. Crie com: bvr alias set <nome> <comando...>")
+			fmt.Println(i18n.T("No shortcuts. Create one with: bvr alias set <name> <command...>"))
 			return nil
 		}
 		names := make([]string, 0, len(cfg.Aliases))
@@ -36,8 +37,8 @@ var aliasCmd = &cobra.Command{
 }
 
 var aliasSetCmd = &cobra.Command{
-	Use:   "set <nome> <comando...>",
-	Short: "Cria ou atualiza um atalho",
+	Use:   i18n.T("set <name> <command...>"),
+	Short: i18n.T("Create or update a shortcut"),
 	Args:  cobra.MinimumNArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg, err := config.Load()
@@ -56,9 +57,9 @@ var aliasSetCmd = &cobra.Command{
 }
 
 var aliasRmCmd = &cobra.Command{
-	Use:     "rm <nome>",
+	Use:     i18n.T("rm <name>"),
 	Aliases: []string{"remove"},
-	Short:   "Remove um atalho",
+	Short:   i18n.T("Remove a shortcut"),
 	Args:    cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg, err := config.Load()
@@ -66,12 +67,12 @@ var aliasRmCmd = &cobra.Command{
 			return err
 		}
 		if !cfg.RemoveAlias(args[0]) {
-			return fmt.Errorf("atalho não encontrado: %s", args[0])
+			return fmt.Errorf(i18n.T("shortcut not found: %s"), args[0])
 		}
 		if err := cfg.Save(); err != nil {
 			return err
 		}
-		fmt.Printf("Atalho removido: %s\n", args[0])
+		fmt.Printf(i18n.T("Shortcut removed: %s\n"), args[0])
 		return nil
 	},
 }
